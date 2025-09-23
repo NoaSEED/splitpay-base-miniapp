@@ -32,6 +32,7 @@ interface GroupContextType {
   // Actions
   createGroup: (groupData: Omit<GroupData, 'id' | 'createdAt' | 'expenses' | 'totalAmount'>) => Promise<boolean>
   addExpense: (groupId: string, expenseData: any) => Promise<boolean>
+  deleteExpense: (groupId: string, expenseId: string) => Promise<boolean>
   getGroup: (groupId: string) => Promise<GroupData | null>
   updateGroup: (groupId: string, updates: Partial<GroupData>) => Promise<boolean>
   deleteGroup: (groupId: string) => Promise<boolean>
@@ -161,6 +162,38 @@ export const GroupProvider: React.FC<{ children: ReactNode }> = ({ children }) =
     } catch (error) {
       console.error('Error adding expense:', error)
       toast.error('Error al agregar el gasto')
+      return false
+    } finally {
+      setIsLoading(false)
+    }
+  }, [groups, saveGroups])
+
+  const deleteExpense = useCallback(async (groupId: string, expenseId: string): Promise<boolean> => {
+    setIsLoading(true)
+    try {
+      const updatedGroups = groups.map(group => {
+        if (group.id === groupId) {
+          const expenseToDelete = group.expenses.find(expense => expense.id === expenseId)
+          if (!expenseToDelete) return group
+          
+          return {
+            ...group,
+            expenses: group.expenses.filter(expense => expense.id !== expenseId),
+            totalAmount: group.totalAmount - (expenseToDelete.amount || 0)
+          }
+        }
+        return group
+      })
+
+      saveGroups(updatedGroups)
+      
+      toast.success('Gasto eliminado')
+      console.log('🗑️ Gasto eliminado:', expenseId)
+      
+      return true
+    } catch (error) {
+      console.error('Error deleting expense:', error)
+      toast.error('Error al eliminar el gasto')
       return false
     } finally {
       setIsLoading(false)
@@ -314,6 +347,7 @@ export const GroupProvider: React.FC<{ children: ReactNode }> = ({ children }) =
     // Actions
     createGroup,
     addExpense,
+    deleteExpense,
     getGroup,
     updateGroup,
     deleteGroup,

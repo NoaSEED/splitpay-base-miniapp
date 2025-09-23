@@ -2,14 +2,14 @@ import React, { useState, useEffect } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import { useWeb3 } from '../contexts/Web3Context'
 import { useGroups } from '../contexts/GroupContext'
-import { ArrowLeft, Plus, Users, DollarSign, Hash, Edit, User } from 'lucide-react'
+import { ArrowLeft, Plus, Users, DollarSign, Hash, Edit, User, Trash2 } from 'lucide-react'
 import AddParticipantName from '../components/AddParticipantName'
 
 const GroupDetail: React.FC = () => {
   const { id } = useParams<{ id: string }>()
   const navigate = useNavigate()
   const { isConnected, account, formatAddress } = useWeb3()
-  const { getGroup, addExpense, getParticipantName, isLoading } = useGroups()
+  const { getGroup, addExpense, deleteExpense, getParticipantName, deleteGroup, isLoading } = useGroups()
   
   const [group, setGroup] = useState<any>(null)
   const [showAddExpense, setShowAddExpense] = useState(false)
@@ -55,6 +55,36 @@ const GroupDetail: React.FC = () => {
   const handleEditParticipantName = (participant: string) => {
     setSelectedParticipant(participant)
     setShowAddNameModal(true)
+  }
+
+  const handleDeleteGroup = async () => {
+    if (!id) return
+    
+    const confirmed = window.confirm(
+      `¿Estás seguro de que quieres eliminar el grupo "${group?.name}"? Esta acción no se puede deshacer.`
+    )
+    
+    if (confirmed) {
+      const success = await deleteGroup(id)
+      if (success) {
+        navigate('/')
+      }
+    }
+  }
+
+  const handleDeleteExpense = async (expenseId: string) => {
+    if (!id) return
+    
+    const confirmed = window.confirm(
+      '¿Estás seguro de que quieres eliminar este gasto? Esta acción no se puede deshacer.'
+    )
+    
+    if (confirmed) {
+      const success = await deleteExpense(id, expenseId)
+      if (success) {
+        loadGroup() // Recargar datos
+      }
+    }
   }
 
   const formatCurrency = (amount: number) => {
@@ -150,13 +180,23 @@ const GroupDetail: React.FC = () => {
           </div>
         </div>
         
-        <button
-          onClick={() => setShowAddExpense(true)}
-          className="flex items-center space-x-2 px-4 py-2 bg-base-500 text-white rounded-lg hover:bg-base-600 transition-colors"
-        >
-          <Plus className="w-4 h-4" />
-          <span>Agregar Gasto</span>
-        </button>
+        <div className="flex items-center space-x-3">
+          <button
+            onClick={() => setShowAddExpense(true)}
+            className="flex items-center space-x-2 px-4 py-2 bg-base-500 text-white rounded-lg hover:bg-base-600 transition-colors"
+          >
+            <Plus className="w-4 h-4" />
+            <span>Agregar Gasto</span>
+          </button>
+          
+          <button
+            onClick={handleDeleteGroup}
+            className="flex items-center space-x-2 px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 transition-colors"
+          >
+            <Trash2 className="w-4 h-4" />
+            <span>Eliminar Grupo</span>
+          </button>
+        </div>
       </div>
 
       {/* Stats Cards */}
@@ -279,13 +319,22 @@ const GroupDetail: React.FC = () => {
                     {formatDate(expense.createdAt)}
                   </p>
                 </div>
-                <div className="text-right">
-                  <p className="text-lg font-semibold text-gray-900">
-                    {formatCurrency(expense.amount)}
-                  </p>
-                  <p className="text-sm text-gray-500">
-                    {formatCurrency(expense.amount / group.participants.length)} por persona
-                  </p>
+                <div className="flex items-center space-x-4">
+                  <div className="text-right">
+                    <p className="text-lg font-semibold text-gray-900">
+                      {formatCurrency(expense.amount)}
+                    </p>
+                    <p className="text-sm text-gray-500">
+                      {formatCurrency(expense.amount / group.participants.length)} por persona
+                    </p>
+                  </div>
+                  <button
+                    onClick={() => handleDeleteExpense(expense.id)}
+                    className="p-2 text-red-500 hover:bg-red-50 rounded-lg transition-colors"
+                    title="Eliminar gasto"
+                  >
+                    <Trash2 size={16} />
+                  </button>
                 </div>
               </div>
             ))}
