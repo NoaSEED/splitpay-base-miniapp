@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import { useWeb3 } from '../contexts/Web3Context'
 import { useGroups } from '../contexts/GroupContext'
-import { ArrowLeft, Plus, Users, DollarSign, Calendar, Hash, FileText, Trash2, Edit } from 'lucide-react'
+import { ArrowLeft, Plus, Users, DollarSign, Hash } from 'lucide-react'
 
 const GroupDetail: React.FC = () => {
   const { id } = useParams<{ id: string }>()
