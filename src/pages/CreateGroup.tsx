@@ -2,7 +2,7 @@ import React, { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useWeb3 } from '../contexts/Web3Context'
 import { useGroups } from '../contexts/GroupContext'
-import { Users, DollarSign, Calendar, Hash, FileText } from 'lucide-react'
+import { Users, Calendar, Hash, FileText } from 'lucide-react'
 
 const CreateGroup: React.FC = () => {
   const navigate = useNavigate()
