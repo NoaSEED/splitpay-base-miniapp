@@ -154,7 +154,7 @@ const Dashboard: React.FC = () => {
         <h3 className="text-lg font-semibold text-gray-900 mb-4">
           Acciones Rápidas
         </h3>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div className="flex justify-center">
           <Link
             to="/create-group"
             className="flex items-center space-x-3 p-4 bg-white rounded-lg hover:shadow-sm transition-shadow border border-base-200"
@@ -167,16 +167,6 @@ const Dashboard: React.FC = () => {
               <p className="text-sm text-gray-600">Inicia un nuevo grupo de gastos</p>
             </div>
           </Link>
-          
-          <div className="flex items-center space-x-3 p-4 bg-white rounded-lg border border-base-200">
-            <div className="w-10 h-10 bg-base-100 rounded-lg flex items-center justify-center">
-              <DollarSign className="w-5 h-5 text-base-600" />
-            </div>
-            <div>
-              <p className="font-medium text-gray-900">Agregar Gasto</p>
-              <p className="text-sm text-gray-600">Registra un nuevo gasto</p>
-            </div>
-          </div>
         </div>
       </div>
     </div>
