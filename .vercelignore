@@ -1,0 +1,7 @@
+# Force Vercel to use latest code
+node_modules
+.git
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
