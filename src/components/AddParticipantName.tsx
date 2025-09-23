@@ -1,6 +1,6 @@
 import React, { useState } from 'react'
 import { useGroups } from '../contexts/GroupContext'
-import { User, Plus, X } from 'lucide-react'
+import { Plus, X } from 'lucide-react'
 import toast from 'react-hot-toast'
 
 interface AddParticipantNameProps {

@@ -85,6 +85,7 @@ const CreateGroup: React.FC = () => {
         category: formData.category,
         divisionMethod: formData.divisionMethod,
         participants: formData.participants,
+        participantNames: {}, // Inicializar como objeto vacío
         startDate: formData.startDate,
         endDate: formData.endDate || undefined,
         status: 'active'

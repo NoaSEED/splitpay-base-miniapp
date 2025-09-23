@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react'
 import { useWeb3 } from '../contexts/Web3Context'
 import { useGroups } from '../contexts/GroupContext'
-import { AlertCircle, X, DollarSign, Users } from 'lucide-react'
+import { AlertCircle, X } from 'lucide-react'
 import toast from 'react-hot-toast'
 
 const DebtNotification: React.FC = () => {
