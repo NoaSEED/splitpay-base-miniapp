@@ -1,5 +1,4 @@
 import React, { createContext, useContext, useState, useEffect, ReactNode, useCallback } from 'react'
-import { ethers } from 'ethers'
 import toast from 'react-hot-toast'
 
 // ===========================================
