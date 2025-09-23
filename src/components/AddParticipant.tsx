@@ -32,7 +32,12 @@ const AddParticipant: React.FC<AddParticipantProps> = ({
     }
 
     // Verificar que no sea un participante duplicado
-    if (existingParticipants.includes(address.toLowerCase())) {
+    const normalizedAddress = address.toLowerCase()
+    const isDuplicate = existingParticipants.some(existing => 
+      existing.toLowerCase() === normalizedAddress
+    )
+    
+    if (isDuplicate) {
       toast.error('Este participante ya está en el grupo')
       return
     }
