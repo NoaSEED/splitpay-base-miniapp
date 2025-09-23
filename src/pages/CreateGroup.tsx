@@ -2,11 +2,17 @@ import React, { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useWeb3 } from '../contexts/Web3Context'
 import { useGroups } from '../contexts/GroupContext'
-import { Users, Calendar, Hash, FileText } from 'lucide-react'
+import { Users, Plus, X, User } from 'lucide-react'
+import AddParticipant from '../components/AddParticipant'
+
+interface Participant {
+  address: string
+  name: string
+}
 
 const CreateGroup: React.FC = () => {
   const navigate = useNavigate()
-  const { isConnected, account } = useWeb3()
+  const { isConnected, account, formatAddress } = useWeb3()
   const { createGroup, isLoading } = useGroups()
 
   const [formData, setFormData] = useState({
@@ -14,78 +20,65 @@ const CreateGroup: React.FC = () => {
     description: '',
     category: 'general',
     divisionMethod: 'equal',
-    participants: [account || ''],
     startDate: new Date().toISOString().split('T')[0],
     endDate: ''
   })
 
-  const [errors, setErrors] = useState<Record<string, string>>({})
+  const [participants, setParticipants] = useState<Participant[]>(() => {
+    // Inicializar con el usuario actual si está conectado
+    if (account) {
+      return [{ address: account, name: 'Tú' }]
+    }
+    return []
+  })
 
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
+  const [showAddParticipant, setShowAddParticipant] = useState(false)
+
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target
     setFormData(prev => ({
       ...prev,
       [name]: value
     }))
-    
-    // Clear error when user starts typing
-    if (errors[name]) {
-      setErrors(prev => ({
-        ...prev,
-        [name]: ''
-      }))
-    }
   }
 
-  const handleParticipantsChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
-    const value = e.target.value
-    const participants = value.split('\n').filter(p => p.trim() !== '')
-    setFormData(prev => ({
-      ...prev,
-      participants: [...participants, account || ''].filter((p, i, arr) => arr.indexOf(p) === i)
-    }))
+  const handleAddParticipant = (address: string, name: string) => {
+    setParticipants(prev => [...prev, { address, name }])
+    setShowAddParticipant(false)
   }
 
-  const validateForm = () => {
-    const newErrors: Record<string, string> = {}
-
-    if (!formData.name.trim()) {
-      newErrors.name = 'El nombre del grupo es requerido'
-    }
-
-    if (!formData.description.trim()) {
-      newErrors.description = 'La descripción es requerida'
-    }
-
-    if (formData.participants.length < 2) {
-      newErrors.participants = 'Se necesitan al menos 2 participantes'
-    }
-
-    setErrors(newErrors)
-    return Object.keys(newErrors).length === 0
+  const handleRemoveParticipant = (address: string) => {
+    setParticipants(prev => prev.filter(p => p.address !== address))
   }
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    
-    if (!validateForm()) {
-      return
-    }
 
     if (!isConnected) {
       alert('Por favor, conecta tu wallet primero')
       return
     }
 
+    if (participants.length < 2) {
+      alert('Debes agregar al menos 2 participantes (incluyéndote a ti)')
+      return
+    }
+
     try {
+      // Crear mapeo de nombres
+      const participantNames: { [key: string]: string } = {}
+      participants.forEach(p => {
+        participantNames[p.address.toLowerCase()] = p.name
+      })
+
       const success = await createGroup({
         name: formData.name,
         description: formData.description,
         currency: 'USDC',
         category: formData.category,
         divisionMethod: formData.divisionMethod,
-        participants: formData.participants,
-        participantNames: {}, // Inicializar como objeto vacío
+        participants: participants.map(p => p.address),
+        participantNames,
         startDate: formData.startDate,
         endDate: formData.endDate || undefined,
         status: 'active'
@@ -120,26 +113,21 @@ const CreateGroup: React.FC = () => {
   return (
     <div className="max-w-2xl mx-auto">
       <div className="mb-8">
-        <h1 className="text-3xl font-bold text-gray-900 mb-2">
-          Crear Nuevo Grupo
-        </h1>
+        <h1 className="text-3xl font-bold text-gray-900 mb-2">Crear Nuevo Grupo</h1>
         <p className="text-gray-600">
-          Crea un grupo para dividir gastos con tus amigos usando USDC en Base.
+          Crea un grupo para dividir gastos con tus amigos usando USDC en Base Network.
         </p>
       </div>
 
       <form onSubmit={handleSubmit} className="space-y-6">
-        {/* Basic Information */}
+        {/* Información básica */}
         <div className="bg-white rounded-lg shadow-sm border border-base-200 p-6">
-          <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center">
-            <FileText className="w-5 h-5 mr-2 text-base-600" />
-            Información Básica
-          </h3>
+          <h2 className="text-lg font-semibold text-gray-900 mb-4">Información del Grupo</h2>
           
-          <div className="space-y-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
               <label htmlFor="name" className="block text-sm font-medium text-gray-700 mb-1">
-                Nombre del Grupo *
+                Nombre del grupo *
               </label>
               <input
                 type="text"
@@ -147,119 +135,130 @@ const CreateGroup: React.FC = () => {
                 name="name"
                 value={formData.name}
                 onChange={handleInputChange}
-                className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-base-500 focus:border-base-500 ${
-                  errors.name ? 'border-red-300' : 'border-gray-300'
-                }`}
-                placeholder="Ej: Viaje a la playa"
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-base-500 focus:border-base-500"
+                placeholder="Ej: Viaje a Barcelona"
+                required
               />
-              {errors.name && (
-                <p className="text-sm text-red-600 mt-1">{errors.name}</p>
-              )}
             </div>
 
             <div>
-              <label htmlFor="description" className="block text-sm font-medium text-gray-700 mb-1">
-                Descripción *
+              <label htmlFor="category" className="block text-sm font-medium text-gray-700 mb-1">
+                Categoría
               </label>
-              <textarea
-                id="description"
-                name="description"
-                value={formData.description}
+              <select
+                id="category"
+                name="category"
+                value={formData.category}
                 onChange={handleInputChange}
-                rows={3}
-                className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-base-500 focus:border-base-500 ${
-                  errors.description ? 'border-red-300' : 'border-gray-300'
-                }`}
-                placeholder="Describe el propósito del grupo..."
-              />
-              {errors.description && (
-                <p className="text-sm text-red-600 mt-1">{errors.description}</p>
-              )}
-            </div>
-
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div>
-                <label htmlFor="category" className="block text-sm font-medium text-gray-700 mb-1">
-                  Categoría
-                </label>
-                <select
-                  id="category"
-                  name="category"
-                  value={formData.category}
-                  onChange={handleInputChange}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-base-500 focus:border-base-500"
-                >
-                  <option value="general">General</option>
-                  <option value="travel">Viaje</option>
-                  <option value="food">Comida</option>
-                  <option value="entertainment">Entretenimiento</option>
-                  <option value="utilities">Servicios</option>
-                  <option value="other">Otro</option>
-                </select>
-              </div>
-
-              <div>
-                <label htmlFor="divisionMethod" className="block text-sm font-medium text-gray-700 mb-1">
-                  Método de División
-                </label>
-                <select
-                  id="divisionMethod"
-                  name="divisionMethod"
-                  value={formData.divisionMethod}
-                  onChange={handleInputChange}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-base-500 focus:border-base-500"
-                >
-                  <option value="equal">Igual para todos</option>
-                  <option value="proportional">Proporcional</option>
-                  <option value="custom">Personalizado</option>
-                </select>
-              </div>
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-base-500 focus:border-base-500"
+              >
+                <option value="general">General</option>
+                <option value="travel">Viaje</option>
+                <option value="food">Comida</option>
+                <option value="entertainment">Entretenimiento</option>
+                <option value="utilities">Servicios</option>
+                <option value="other">Otro</option>
+              </select>
             </div>
           </div>
-        </div>
 
-        {/* Participants */}
-        <div className="bg-white rounded-lg shadow-sm border border-base-200 p-6">
-          <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center">
-            <Users className="w-5 h-5 mr-2 text-base-600" />
-            Participantes
-          </h3>
-          
-          <div>
-            <label htmlFor="participants" className="block text-sm font-medium text-gray-700 mb-1">
-              Direcciones de Wallet (una por línea) *
+          <div className="mt-4">
+            <label htmlFor="description" className="block text-sm font-medium text-gray-700 mb-1">
+              Descripción
             </label>
             <textarea
-              id="participants"
-              name="participants"
-              value={formData.participants.filter(p => p !== account).join('\n')}
-              onChange={handleParticipantsChange}
-              rows={4}
-              className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-base-500 focus:border-base-500 ${
-                errors.participants ? 'border-red-300' : 'border-gray-300'
-              }`}
-              placeholder="0x1234567890123456789012345678901234567890&#10;0x9876543210987654321098765432109876543210"
+              id="description"
+              name="description"
+              value={formData.description}
+              onChange={handleInputChange}
+              rows={3}
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-base-500 focus:border-base-500"
+              placeholder="Describe el propósito del grupo..."
             />
-            {errors.participants && (
-              <p className="text-sm text-red-600 mt-1">{errors.participants}</p>
-            )}
-            <p className="text-sm text-gray-500 mt-1">
-              Tu dirección ({account?.slice(0, 6)}...{account?.slice(-4)}) se agregará automáticamente.
-            </p>
           </div>
         </div>
 
-        {/* Dates */}
+        {/* Participantes */}
         <div className="bg-white rounded-lg shadow-sm border border-base-200 p-6">
-          <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center">
-            <Calendar className="w-5 h-5 mr-2 text-base-600" />
-            Fechas
-          </h3>
+          <div className="flex justify-between items-center mb-4">
+            <h2 className="text-lg font-semibold text-gray-900">Participantes</h2>
+            <button
+              type="button"
+              onClick={() => setShowAddParticipant(true)}
+              className="flex items-center space-x-2 px-4 py-2 bg-base-500 text-white rounded-lg hover:bg-base-600 transition-colors"
+            >
+              <Plus size={16} />
+              <span>Agregar Participante</span>
+            </button>
+          </div>
+
+          {participants.length === 0 ? (
+            <div className="text-center py-8 text-gray-500">
+              <Users className="w-12 h-12 mx-auto mb-3 text-gray-300" />
+              <p>No hay participantes agregados</p>
+              <p className="text-sm">Agrega al menos un participante para crear el grupo</p>
+            </div>
+          ) : (
+            <div className="space-y-3">
+              {participants.map((participant) => (
+                <div key={participant.address} className="flex items-center justify-between p-3 bg-base-50 rounded-lg">
+                  <div className="flex items-center space-x-3">
+                    <div className="w-8 h-8 bg-base-100 rounded-full flex items-center justify-center">
+                      <User size={16} className="text-base-600" />
+                    </div>
+                    <div>
+                      <p className="font-medium text-gray-900">{participant.name}</p>
+                      <p className="text-sm text-gray-500 font-mono">
+                        {formatAddress(participant.address)}
+                      </p>
+                    </div>
+                  </div>
+                  {participant.address !== account && (
+                    <button
+                      type="button"
+                      onClick={() => handleRemoveParticipant(participant.address)}
+                      className="p-2 text-red-500 hover:bg-red-50 rounded-lg transition-colors"
+                      title="Eliminar participante"
+                    >
+                      <X size={16} />
+                    </button>
+                  )}
+                </div>
+              ))}
+            </div>
+          )}
+
+          <div className="mt-4 text-sm text-gray-600">
+            <p>• Tú estás incluido automáticamente como participante</p>
+            <p>• Agrega las direcciones de wallet de tus amigos</p>
+            <p>• Mínimo 2 participantes para crear el grupo</p>
+          </div>
+        </div>
+
+        {/* Configuración */}
+        <div className="bg-white rounded-lg shadow-sm border border-base-200 p-6">
+          <h2 className="text-lg font-semibold text-gray-900 mb-4">Configuración</h2>
           
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
+              <label htmlFor="divisionMethod" className="block text-sm font-medium text-gray-700 mb-1">
+                Método de división
+              </label>
+              <select
+                id="divisionMethod"
+                name="divisionMethod"
+                value={formData.divisionMethod}
+                onChange={handleInputChange}
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-base-500 focus:border-base-500"
+              >
+                <option value="equal">División igual</option>
+                <option value="proportional">Proporcional</option>
+              </select>
+            </div>
+
+            <div>
               <label htmlFor="startDate" className="block text-sm font-medium text-gray-700 mb-1">
-                Fecha de Inicio
+                Fecha de inicio
               </label>
               <input
                 type="date"
@@ -268,54 +267,53 @@ const CreateGroup: React.FC = () => {
                 value={formData.startDate}
                 onChange={handleInputChange}
                 className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-base-500 focus:border-base-500"
-              />
-            </div>
-
-            <div>
-              <label htmlFor="endDate" className="block text-sm font-medium text-gray-700 mb-1">
-                Fecha de Fin (opcional)
-              </label>
-              <input
-                type="date"
-                id="endDate"
-                name="endDate"
-                value={formData.endDate}
-                onChange={handleInputChange}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-base-500 focus:border-base-500"
+                required
               />
             </div>
           </div>
+
+          <div className="mt-4">
+            <label htmlFor="endDate" className="block text-sm font-medium text-gray-700 mb-1">
+              Fecha de fin (opcional)
+            </label>
+            <input
+              type="date"
+              id="endDate"
+              name="endDate"
+              value={formData.endDate}
+              onChange={handleInputChange}
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-base-500 focus:border-base-500"
+            />
+          </div>
         </div>
 
-        {/* Submit */}
-        <div className="flex items-center justify-end space-x-4">
+        {/* Botones */}
+        <div className="flex justify-end space-x-4">
           <button
             type="button"
             onClick={() => navigate('/')}
-            className="px-4 py-2 text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors"
+            className="px-6 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors"
           >
             Cancelar
           </button>
-          
           <button
             type="submit"
-            disabled={isLoading}
-            className="px-6 py-2 bg-base-500 text-white rounded-lg hover:bg-base-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center space-x-2"
+            disabled={isLoading || participants.length < 2 || !formData.name.trim()}
+            className="px-6 py-2 bg-base-500 text-white rounded-lg hover:bg-base-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
           >
-            {isLoading ? (
-              <>
-                <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-                <span>Creando...</span>
-              </>
-            ) : (
-              <>
-                <Hash className="w-4 h-4" />
-                <span>Crear Grupo</span>
-              </>
-            )}
+            {isLoading ? 'Creando...' : 'Crear Grupo'}
           </button>
         </div>
       </form>
+
+      {/* Modal para agregar participante */}
+      {showAddParticipant && (
+        <AddParticipant
+          onAddParticipant={handleAddParticipant}
+          onClose={() => setShowAddParticipant(false)}
+          existingParticipants={participants.map(p => p.address)}
+        />
+      )}
     </div>
   )
 }
