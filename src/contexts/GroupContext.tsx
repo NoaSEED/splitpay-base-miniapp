@@ -15,6 +15,7 @@ interface GroupData {
   endDate?: string
   divisionMethod: string
   participants: string[]
+  participantNames: { [address: string]: string } // Mapeo de dirección a nombre
   createdAt: string
   status: string
   totalAmount: number
@@ -35,9 +36,14 @@ interface GroupContextType {
   updateGroup: (groupId: string, updates: Partial<GroupData>) => Promise<boolean>
   deleteGroup: (groupId: string) => Promise<boolean>
   
+  // Participant management
+  addParticipantName: (groupId: string, address: string, name: string) => Promise<boolean>
+  getParticipantName: (groupId: string, address: string) => string
+  
   // Utility
   getGroupsByParticipant: (address: string) => GroupData[]
   getTotalOwed: (groupId: string, participant: string) => number
+  getParticipantDebts: (address: string) => { groupId: string; groupName: string; amount: number }[]
 }
 
 // ===========================================
@@ -105,7 +111,8 @@ export const GroupProvider: React.FC<{ children: ReactNode }> = ({ children }) =
         createdAt: new Date().toISOString(),
         expenses: [],
         totalAmount: 0,
-        status: 'active'
+        status: 'active',
+        participantNames: groupData.participantNames || {}
       }
 
       const updatedGroups = [...groups, newGroup]
@@ -248,6 +255,53 @@ export const GroupProvider: React.FC<{ children: ReactNode }> = ({ children }) =
   }, [groups])
 
   // ===========================================
+  // Participant Name Management
+  // ===========================================
+
+  const addParticipantName = useCallback(async (groupId: string, address: string, name: string): Promise<boolean> => {
+    setIsLoading(true)
+    try {
+      const updatedGroups = groups.map(group => {
+        if (group.id === groupId) {
+          return {
+            ...group,
+            participantNames: {
+              ...group.participantNames,
+              [address.toLowerCase()]: name
+            }
+          }
+        }
+        return group
+      })
+
+      saveGroups(updatedGroups)
+      toast.success(`Nombre "${name}" agregado para ${address}`)
+      return true
+    } catch (error) {
+      console.error('Error adding participant name:', error)
+      toast.error('Error al agregar el nombre')
+      return false
+    } finally {
+      setIsLoading(false)
+    }
+  }, [groups, saveGroups])
+
+  const getParticipantName = useCallback((groupId: string, address: string): string => {
+    const group = groups.find(g => g.id === groupId)
+    if (!group || !group.participantNames) return ''
+    return group.participantNames[address.toLowerCase()] || ''
+  }, [groups])
+
+  const getParticipantDebts = useCallback((address: string): { groupId: string; groupName: string; amount: number }[] => {
+    const userGroups = getGroupsByParticipant(address)
+    return userGroups.map(group => ({
+      groupId: group.id,
+      groupName: group.name,
+      amount: getTotalOwed(group.id, address)
+    })).filter(debt => debt.amount > 0)
+  }, [getGroupsByParticipant, getTotalOwed])
+
+  // ===========================================
   // Context Value
   // ===========================================
 
@@ -264,9 +318,14 @@ export const GroupProvider: React.FC<{ children: ReactNode }> = ({ children }) =
     updateGroup,
     deleteGroup,
     
+    // Participant management
+    addParticipantName,
+    getParticipantName,
+    
     // Utility
     getGroupsByParticipant,
     getTotalOwed,
+    getParticipantDebts,
   }
 
   return <GroupContext.Provider value={value}>{children}</GroupContext.Provider>

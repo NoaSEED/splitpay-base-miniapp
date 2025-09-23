@@ -2,16 +2,19 @@ import React, { useState, useEffect } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import { useWeb3 } from '../contexts/Web3Context'
 import { useGroups } from '../contexts/GroupContext'
-import { ArrowLeft, Plus, Users, DollarSign, Hash } from 'lucide-react'
+import { ArrowLeft, Plus, Users, DollarSign, Hash, Edit, User } from 'lucide-react'
+import AddParticipantName from '../components/AddParticipantName'
 
 const GroupDetail: React.FC = () => {
   const { id } = useParams<{ id: string }>()
   const navigate = useNavigate()
-  const { isConnected, account } = useWeb3()
-  const { getGroup, addExpense, isLoading } = useGroups()
+  const { isConnected, account, formatAddress } = useWeb3()
+  const { getGroup, addExpense, getParticipantName, isLoading } = useGroups()
   
   const [group, setGroup] = useState<any>(null)
   const [showAddExpense, setShowAddExpense] = useState(false)
+  const [showAddNameModal, setShowAddNameModal] = useState(false)
+  const [selectedParticipant, setSelectedParticipant] = useState('')
   const [newExpense, setNewExpense] = useState({
     description: '',
     amount: '',
@@ -47,6 +50,11 @@ const GroupDetail: React.FC = () => {
       setShowAddExpense(false)
       loadGroup() // Recargar datos
     }
+  }
+
+  const handleEditParticipantName = (participant: string) => {
+    setSelectedParticipant(participant)
+    setShowAddNameModal(true)
   }
 
   const formatCurrency = (amount: number) => {
@@ -196,20 +204,30 @@ const GroupDetail: React.FC = () => {
         <div className="space-y-3">
           {group.participants.map((participant: string, index: number) => {
             const owed = getTotalOwed(participant)
+            const participantName = getParticipantName(group.id, participant)
+            const displayName = participantName || (participant === account ? 'Tú' : 'Participante')
+            
             return (
               <div key={index} className="flex items-center justify-between p-3 bg-base-50 rounded-lg">
                 <div className="flex items-center space-x-3">
                   <div className="w-8 h-8 bg-base-100 rounded-full flex items-center justify-center">
-                    <span className="text-sm font-medium text-base-700">
-                      {participant.slice(0, 2).toUpperCase()}
-                    </span>
+                    <User size={16} className="text-base-600" />
                   </div>
-                  <div>
-                    <p className="font-medium text-gray-900">
-                      {participant.slice(0, 6)}...{participant.slice(-4)}
-                    </p>
+                  <div className="flex-1">
+                    <div className="flex items-center space-x-2">
+                      <p className="font-medium text-gray-900">
+                        {displayName}
+                      </p>
+                      <button
+                        onClick={() => handleEditParticipantName(participant)}
+                        className="p-1 hover:bg-base-200 rounded transition-colors"
+                        title="Editar nombre"
+                      >
+                        <Edit size={14} className="text-base-500" />
+                      </button>
+                    </div>
                     <p className="text-sm text-gray-500">
-                      {participant === account ? 'Tú' : 'Participante'}
+                      {formatAddress(participant)}
                     </p>
                   </div>
                 </div>
@@ -347,6 +365,20 @@ const GroupDetail: React.FC = () => {
             </form>
           </div>
         </div>
+      )}
+
+      {/* Add Participant Name Modal */}
+      {showAddNameModal && (
+        <AddParticipantName
+          groupId={group.id}
+          address={selectedParticipant}
+          currentName={getParticipantName(group.id, selectedParticipant)}
+          onClose={() => {
+            setShowAddNameModal(false)
+            setSelectedParticipant('')
+            loadGroup() // Recargar datos para mostrar el nombre actualizado
+          }}
+        />
       )}
     </div>
   )
