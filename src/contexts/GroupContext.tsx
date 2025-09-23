@@ -166,9 +166,28 @@ export const GroupProvider: React.FC<{ children: ReactNode }> = ({ children }) =
             groupId: groupId
           }
           
+          // Crear pagos automáticamente para cada participante que debe
+          const newPayments: Payment[] = []
+          const amountPerPerson = expenseData.amount / group.participants.length
+          
+          group.participants.forEach(participant => {
+            if (participant !== expenseData.paidBy) {
+              // Solo crear pago si el participante no es quien pagó
+              newPayments.push({
+                id: `payment_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+                from: participant,
+                to: expenseData.paidBy,
+                amount: amountPerPerson,
+                status: 'pending',
+                createdAt: new Date().toISOString()
+              })
+            }
+          })
+          
           return {
             ...group,
             expenses: [...group.expenses, newExpense],
+            payments: [...group.payments, ...newPayments],
             totalAmount: group.totalAmount + (expenseData.amount || 0)
           }
         }
@@ -401,20 +420,45 @@ export const GroupProvider: React.FC<{ children: ReactNode }> = ({ children }) =
     try {
       const updatedGroups = groups.map(group => {
         if (group.id === groupId) {
+          const updatedPayments = group.payments.map(payment => {
+            if (payment.id === paymentId) {
+              return {
+                ...payment,
+                status: 'completed' as const,
+                transactionHash,
+                completedAt: new Date().toISOString(),
+                completedBy
+              }
+            }
+            return payment
+          })
+
+          // Crear notificación automática
+          const completedPayment = group.payments.find(p => p.id === paymentId)
+          if (completedPayment) {
+            // Guardar notificación en localStorage
+            const notification = {
+              id: `payment_completed_${paymentId}`,
+              type: 'payment_completed',
+              groupId: group.id,
+              groupName: group.name,
+              message: `Pago de $${completedPayment.amount.toFixed(2)} USDC completado`,
+              amount: completedPayment.amount,
+              from: completedPayment.from,
+              to: completedPayment.to,
+              timestamp: new Date().toISOString(),
+              read: false
+            }
+
+            // Guardar notificación para el que recibió el pago
+            const toNotifications = JSON.parse(localStorage.getItem(`notifications_${completedPayment.to}`) || '[]')
+            toNotifications.push(notification)
+            localStorage.setItem(`notifications_${completedPayment.to}`, JSON.stringify(toNotifications))
+          }
+
           return {
             ...group,
-            payments: group.payments.map(payment => {
-              if (payment.id === paymentId) {
-                return {
-                  ...payment,
-                  status: 'completed' as const,
-                  transactionHash,
-                  completedAt: new Date().toISOString(),
-                  completedBy
-                }
-              }
-              return payment
-            })
+            payments: updatedPayments
           }
         }
         return group

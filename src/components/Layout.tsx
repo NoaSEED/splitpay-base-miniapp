@@ -3,6 +3,7 @@ import { Link, useLocation } from 'react-router-dom'
 import { Wallet, Users, Plus, Home } from 'lucide-react'
 import WalletConnect from './WalletConnect'
 import DebtNotification from './DebtNotification'
+import PaymentNotifications from './PaymentNotifications'
 
 interface LayoutProps {
   children: React.ReactNode
@@ -71,8 +72,9 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
         {children}
       </main>
 
-      {/* Debt Notification */}
+      {/* Notifications */}
       <DebtNotification />
+      <PaymentNotifications />
 
       {/* Footer */}
       <footer className="bg-white border-t border-base-200 mt-auto">

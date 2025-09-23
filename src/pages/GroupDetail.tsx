@@ -5,6 +5,7 @@ import { useGroups } from '../contexts/GroupContext'
 import { ArrowLeft, Plus, Users, DollarSign, Hash, Edit, User, Trash2 } from 'lucide-react'
 import AddParticipantName from '../components/AddParticipantName'
 import PendingPayments from '../components/PendingPayments'
+import PaymentHistory from '../components/PaymentHistory'
 
 const GroupDetail: React.FC = () => {
   const { id } = useParams<{ id: string }>()
@@ -347,6 +348,9 @@ const GroupDetail: React.FC = () => {
           </div>
         )}
       </div>
+
+      {/* Payment History */}
+      <PaymentHistory groupId={group.id} />
 
       {/* Add Expense Modal */}
       {showAddExpense && (
