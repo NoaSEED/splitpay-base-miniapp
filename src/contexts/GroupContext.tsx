@@ -5,6 +5,20 @@ import toast from 'react-hot-toast'
 // Types & Interfaces
 // ===========================================
 
+interface Payment {
+  id: string
+  from: string // Quien debe pagar
+  to: string // Quien recibe el pago
+  amount: number
+  status: 'pending' | 'completed' | 'disputed'
+  transactionHash?: string // Hash de la transacción
+  proofImage?: string // Imagen del comprobante
+  createdAt: string
+  completedAt?: string
+  completedBy?: string // Quien marcó como completado
+  notes?: string
+}
+
 interface GroupData {
   id: string
   name: string
@@ -20,6 +34,7 @@ interface GroupData {
   status: string
   totalAmount: number
   expenses: any[]
+  payments: Payment[] // Nuevo: historial de pagos
   contractAddress?: string
 }
 
@@ -40,6 +55,12 @@ interface GroupContextType {
   // Participant management
   addParticipantName: (groupId: string, address: string, name: string) => Promise<boolean>
   getParticipantName: (groupId: string, address: string) => string
+  
+  // Payment management
+  createPayment: (groupId: string, from: string, to: string, amount: number) => Promise<boolean>
+  completePayment: (groupId: string, paymentId: string, transactionHash: string, completedBy: string) => Promise<boolean>
+  getPendingPayments: (groupId: string, participant: string) => Payment[]
+  getPaymentHistory: (groupId: string) => Payment[]
   
   // Utility
   getGroupsByParticipant: (address: string) => GroupData[]
@@ -111,6 +132,7 @@ export const GroupProvider: React.FC<{ children: ReactNode }> = ({ children }) =
         id: `group_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
         createdAt: new Date().toISOString(),
         expenses: [],
+        payments: [],
         totalAmount: 0,
         status: 'active',
         participantNames: groupData.participantNames || {}
@@ -335,6 +357,103 @@ export const GroupProvider: React.FC<{ children: ReactNode }> = ({ children }) =
   }, [getGroupsByParticipant, getTotalOwed])
 
   // ===========================================
+  // Payment Management
+  // ===========================================
+
+  const createPayment = useCallback(async (groupId: string, from: string, to: string, amount: number): Promise<boolean> => {
+    setIsLoading(true)
+    try {
+      const newPayment: Payment = {
+        id: `payment_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+        from,
+        to,
+        amount,
+        status: 'pending',
+        createdAt: new Date().toISOString()
+      }
+
+      const updatedGroups = groups.map(group => {
+        if (group.id === groupId) {
+          return {
+            ...group,
+            payments: [...group.payments, newPayment]
+          }
+        }
+        return group
+      })
+
+      saveGroups(updatedGroups)
+      toast.success(`Pago de $${amount.toFixed(2)} USDC creado`)
+      console.log('💰 Pago creado:', newPayment.id)
+      
+      return true
+    } catch (error) {
+      console.error('Error creating payment:', error)
+      toast.error('Error al crear el pago')
+      return false
+    } finally {
+      setIsLoading(false)
+    }
+  }, [groups, saveGroups])
+
+  const completePayment = useCallback(async (groupId: string, paymentId: string, transactionHash: string, completedBy: string): Promise<boolean> => {
+    setIsLoading(true)
+    try {
+      const updatedGroups = groups.map(group => {
+        if (group.id === groupId) {
+          return {
+            ...group,
+            payments: group.payments.map(payment => {
+              if (payment.id === paymentId) {
+                return {
+                  ...payment,
+                  status: 'completed' as const,
+                  transactionHash,
+                  completedAt: new Date().toISOString(),
+                  completedBy
+                }
+              }
+              return payment
+            })
+          }
+        }
+        return group
+      })
+
+      saveGroups(updatedGroups)
+      toast.success('Pago marcado como completado')
+      console.log('✅ Pago completado:', paymentId)
+      
+      return true
+    } catch (error) {
+      console.error('Error completing payment:', error)
+      toast.error('Error al completar el pago')
+      return false
+    } finally {
+      setIsLoading(false)
+    }
+  }, [groups, saveGroups])
+
+  const getPendingPayments = useCallback((groupId: string, participant: string): Payment[] => {
+    const group = groups.find(g => g.id === groupId)
+    if (!group) return []
+    
+    return group.payments.filter(payment => 
+      payment.from.toLowerCase() === participant.toLowerCase() && 
+      payment.status === 'pending'
+    )
+  }, [groups])
+
+  const getPaymentHistory = useCallback((groupId: string): Payment[] => {
+    const group = groups.find(g => g.id === groupId)
+    if (!group) return []
+    
+    return group.payments.sort((a, b) => 
+      new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+    )
+  }, [groups])
+
+  // ===========================================
   // Context Value
   // ===========================================
 
@@ -355,6 +474,12 @@ export const GroupProvider: React.FC<{ children: ReactNode }> = ({ children }) =
     // Participant management
     addParticipantName,
     getParticipantName,
+    
+    // Payment management
+    createPayment,
+    completePayment,
+    getPendingPayments,
+    getPaymentHistory,
     
     // Utility
     getGroupsByParticipant,
@@ -381,4 +506,4 @@ export const useGroups = (): GroupContextType => {
 // Export types for external use
 // ===========================================
 
-export type { GroupData, GroupContextType }
+export type { GroupData, GroupContextType, Payment }

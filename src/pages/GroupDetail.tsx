@@ -4,6 +4,7 @@ import { useWeb3 } from '../contexts/Web3Context'
 import { useGroups } from '../contexts/GroupContext'
 import { ArrowLeft, Plus, Users, DollarSign, Hash, Edit, User, Trash2 } from 'lucide-react'
 import AddParticipantName from '../components/AddParticipantName'
+import PendingPayments from '../components/PendingPayments'
 
 const GroupDetail: React.FC = () => {
   const { id } = useParams<{ id: string }>()
@@ -198,6 +199,11 @@ const GroupDetail: React.FC = () => {
           </button>
         </div>
       </div>
+
+      {/* Pending Payments */}
+      {account && (
+        <PendingPayments groupId={group.id} />
+      )}
 
       {/* Stats Cards */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">

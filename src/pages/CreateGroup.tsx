@@ -79,6 +79,7 @@ const CreateGroup: React.FC = () => {
         divisionMethod: formData.divisionMethod,
         participants: participants.map(p => p.address),
         participantNames,
+        payments: [],
         startDate: formData.startDate,
         endDate: formData.endDate || undefined,
         status: 'active'
