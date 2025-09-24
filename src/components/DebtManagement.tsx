@@ -1,4 +1,4 @@
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
 import { useWeb3 } from '../contexts/Web3Context'
 import { useGroups } from '../contexts/GroupContext'
 import { AlertCircle, Bell, CheckCircle, XCircle } from 'lucide-react'
@@ -12,7 +12,7 @@ interface DebtManagementProps {
 
 const DebtManagement: React.FC<DebtManagementProps> = ({ groupId, onPaymentCompleted }) => {
   const { account } = useWeb3()
-  const { getParticipantDebts } = useGroups()
+  const { getParticipantDebts, getTotalOwed } = useGroups()
   const [showRequestModal, setShowRequestModal] = useState(false)
   const [showCancelModal, setShowCancelModal] = useState(false)
   const [selectedDebt, setSelectedDebt] = useState<{
@@ -20,8 +20,14 @@ const DebtManagement: React.FC<DebtManagementProps> = ({ groupId, onPaymentCompl
     to: string
     amount: number
   } | null>(null)
-  const debts = account ? getParticipantDebts(account) : []
-  const groupDebt = debts.find(debt => debt.groupId === groupId)
+  const [refreshKey, setRefreshKey] = useState(0)
+  
+  // Recalcular deuda cada vez que cambie algo
+  const groupDebt = account ? {
+    groupId,
+    groupName: 'Grupo',
+    amount: getTotalOwed(groupId, account)
+  } : null
 
   const handleRequestPayment = (from: string, to: string, amount: number) => {
     setSelectedDebt({ from, to, amount })
@@ -35,10 +41,18 @@ const DebtManagement: React.FC<DebtManagementProps> = ({ groupId, onPaymentCompl
 
   const handleDebtCancelled = () => {
     // Forzar refresh cuando se cancela una deuda
+    setRefreshKey(prev => prev + 1)
     if (onPaymentCompleted) {
       onPaymentCompleted()
     }
   }
+
+  // Forzar refresh cuando se complete un pago
+  useEffect(() => {
+    if (onPaymentCompleted) {
+      setRefreshKey(prev => prev + 1)
+    }
+  }, [onPaymentCompleted])
 
   const formatCurrency = (amount: number) => {
     return new Intl.NumberFormat('en-US', {
