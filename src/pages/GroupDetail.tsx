@@ -30,6 +30,7 @@ const GroupDetail: React.FC = () => {
     amount: '',
     paidBy: account || ''
   })
+  const [participantsRefreshKey, setParticipantsRefreshKey] = useState(0)
 
   useEffect(() => {
     if (id) {
@@ -47,6 +48,8 @@ const GroupDetail: React.FC = () => {
   const handlePaymentCompleted = () => {
     // Recargar datos del grupo
     loadGroup()
+    // Forzar actualización de participantes
+    setParticipantsRefreshKey(prev => prev + 1)
   }
 
   const handleAddExpense = async (e: React.FormEvent) => {
@@ -294,7 +297,7 @@ const GroupDetail: React.FC = () => {
       {/* Participants and Balances */}
       <div className="bg-white rounded-lg shadow-sm border border-base-200 p-6 mb-8">
         <h3 className="text-lg font-semibold text-gray-900 mb-4">Participantes y Saldos</h3>
-        <div className="space-y-3">
+        <div key={participantsRefreshKey} className="space-y-3">
           {group.participants.map((participant: string, index: number) => {
             const owed = getTotalOwed(participant)
             const participantName = getParticipantName(group.id, participant)
