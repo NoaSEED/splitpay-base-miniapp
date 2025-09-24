@@ -32,10 +32,18 @@ const DebtManagement: React.FC<DebtManagementProps> = ({ groupId, onPaymentCompl
       // Encontrar el grupo y agregar un pago completado
       const updatedGroups = currentGroups.map((group: any) => {
         if (group.id === groupId) {
+          // Encontrar a quién le debe (el que pagó los gastos)
+          const group = currentGroups.find((g: any) => g.id === groupId)
+          const expenses = group?.expenses || []
+          const activeExpenses = expenses.filter((expense: any) => expense.status !== 'cancelled')
+          
+          // Encontrar quién pagó los gastos (el que debe recibir)
+          const paidBy = activeExpenses.length > 0 ? activeExpenses[0].paidBy : account
+          
           const completedPayment = {
             id: `paid-${Date.now()}`,
             from: account,
-            to: 'group',
+            to: paidBy,
             amount: groupDebt.amount,
             status: 'completed',
             transactionHash: `tx-${Date.now()}`,
