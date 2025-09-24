@@ -417,18 +417,21 @@ export const GroupProvider: React.FC<{ children: ReactNode }> = ({ children }) =
       .filter(expense => expense.paidBy?.toLowerCase() === participant.toLowerCase())
       .reduce((sum, expense) => sum + (expense.amount || 0), 0)
 
-    // Lo que ha recibido en pagos completados (dinero que le deben)
+    // Lo que ha recibido en pagos completados
     const receivedPayments = group.payments
       .filter(payment => payment.to?.toLowerCase() === participant.toLowerCase() && payment.status === 'completed')
       .reduce((sum, payment) => sum + payment.amount, 0)
 
-    // Lo que ha pagado en pagos completados (dinero que ha pagado)
-    const madePayments = group.payments
-      .filter(payment => payment.from?.toLowerCase() === participant.toLowerCase() && payment.status === 'completed')
-      .reduce((sum, payment) => sum + payment.amount, 0)
+    // Deuda = lo que debe - lo que ha pagado - lo que ha recibido
+    const debt = sharePerPerson - paidByParticipant - receivedPayments
 
-    // Deuda = lo que debe - lo que ha pagado en gastos - lo que ha recibido + lo que ha pagado
-    const debt = sharePerPerson - paidByParticipant - receivedPayments + madePayments
+    console.log('getTotalOwed Debug:', {
+      participant,
+      sharePerPerson,
+      paidByParticipant,
+      receivedPayments,
+      debt: Math.max(0, debt)
+    })
 
     return Math.max(0, debt)
   }, [groups])
