@@ -2,7 +2,6 @@ import React from 'react'
 import { Link, useLocation } from 'react-router-dom'
 import { Wallet, Users, Plus, Home, Twitter } from 'lucide-react'
 import WalletConnect from './WalletConnect'
-import DebtNotification from './DebtNotification'
 import PaymentNotifications from './PaymentNotifications'
 
 interface LayoutProps {
@@ -73,7 +72,6 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
       </main>
 
       {/* Notifications */}
-      <DebtNotification />
       <PaymentNotifications />
 
       {/* Footer */}
