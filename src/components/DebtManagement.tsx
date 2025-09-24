@@ -11,7 +11,7 @@ interface DebtManagementProps {
 
 const DebtManagement: React.FC<DebtManagementProps> = ({ groupId, onPaymentCompleted }) => {
   const { account } = useWeb3()
-  const { getTotalOwed, cancelDebt } = useGroups()
+  const { getTotalOwed, groups, setGroups } = useGroups()
   const [isLoading, setIsLoading] = useState(false)
   
   // Recalcular deuda cada vez que cambie algo
@@ -26,22 +26,39 @@ const DebtManagement: React.FC<DebtManagementProps> = ({ groupId, onPaymentCompl
     
     setIsLoading(true)
     try {
-      // Cancelar la deuda directamente
-      const success = await cancelDebt(
-        groupId,
-        account, // from
-        'group', // to
-        groupDebt.amount,
-        'Pago completado por el usuario'
-      )
-      
-      if (success) {
-        toast.success('Deuda pagada exitosamente')
-        if (onPaymentCompleted) {
-          onPaymentCompleted()
+      // Encontrar el grupo y agregar un pago completado
+      const updatedGroups = groups.map(group => {
+        if (group.id === groupId) {
+          const completedPayment = {
+            id: `paid-${Date.now()}`,
+            from: account,
+            to: 'group',
+            amount: groupDebt.amount,
+            status: 'completed' as const,
+            transactionHash: `tx-${Date.now()}`,
+            createdAt: new Date().toISOString(),
+            completedAt: new Date().toISOString(),
+            completedBy: account,
+            notes: 'Pago completado por el usuario'
+          }
+          
+          return {
+            ...group,
+            payments: [...group.payments, completedPayment]
+          }
         }
-      } else {
-        toast.error('Error al pagar la deuda')
+        return group
+      })
+      
+      // Actualizar el estado
+      setGroups(updatedGroups)
+      
+      // Guardar en localStorage
+      localStorage.setItem('groups', JSON.stringify(updatedGroups))
+      
+      toast.success('Deuda pagada exitosamente')
+      if (onPaymentCompleted) {
+        onPaymentCompleted()
       }
     } catch (error) {
       console.error('Error paying debt:', error)
