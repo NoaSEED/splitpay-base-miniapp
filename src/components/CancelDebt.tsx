@@ -20,7 +20,7 @@ const CancelDebt: React.FC<CancelDebtProps> = ({
   onClose
 }) => {
   const { account, formatAddress } = useWeb3()
-  const { getParticipantName, completePayment } = useGroups()
+  const { getParticipantName, cancelDebt } = useGroups()
   const [isLoading, setIsLoading] = useState(false)
   const [reason, setReason] = useState('')
 
@@ -37,25 +37,10 @@ const CancelDebt: React.FC<CancelDebtProps> = ({
 
     setIsLoading(true)
     try {
-      // Crear un pago "cancelado" para registrar la cancelación
-      const cancelledPayment = {
-        id: `cancelled_${Date.now()}`,
-        from,
-        to,
-        amount: 0, // Monto 0 porque se cancela
-        status: 'cancelled' as const,
-        transactionHash: `CANCELLED_${Date.now()}`,
-        completedAt: new Date().toISOString(),
-        completedBy: account!,
-        notes: `Cancelado: ${reason}`,
-        createdAt: new Date().toISOString()
+      const success = await cancelDebt(groupId, from, to, amount, reason)
+      if (success) {
+        onClose()
       }
-
-      // Marcar como completado con estado "cancelled"
-      await completePayment(groupId, cancelledPayment.id, cancelledPayment.transactionHash, account!)
-      
-      toast.success('Deuda cancelada exitosamente')
-      onClose()
     } catch (error) {
       console.error('Error cancelling debt:', error)
       toast.error('Error al cancelar la deuda')

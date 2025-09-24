@@ -49,6 +49,7 @@ interface GroupContextType {
   addExpense: (groupId: string, expenseData: any) => Promise<boolean>
   deleteExpense: (groupId: string, expenseId: string) => Promise<boolean>
   cancelExpense: (groupId: string, expenseId: string) => Promise<boolean>
+  cancelDebt: (groupId: string, from: string, to: string, amount: number, reason: string) => Promise<boolean>
   getGroup: (groupId: string) => Promise<GroupData | null>
   updateGroup: (groupId: string, updates: Partial<GroupData>) => Promise<boolean>
   deleteGroup: (groupId: string) => Promise<boolean>
@@ -257,9 +258,20 @@ export const GroupProvider: React.FC<{ children: ReactNode }> = ({ children }) =
               : expense
           )
           
+          // También cancelar todos los pagos relacionados con este gasto
+          const updatedPayments = group.payments.map(payment => {
+            // Si el pago está relacionado con este gasto (mismo monto y participantes)
+            if (payment.amount === expenseToCancel.amount && 
+                (payment.from === expenseToCancel.paidBy || payment.to === expenseToCancel.paidBy)) {
+              return { ...payment, status: 'cancelled' as const }
+            }
+            return payment
+          })
+          
           return {
             ...group,
-            expenses: updatedExpenses
+            expenses: updatedExpenses,
+            payments: updatedPayments
           }
         }
         return group
@@ -274,6 +286,46 @@ export const GroupProvider: React.FC<{ children: ReactNode }> = ({ children }) =
     } catch (error) {
       console.error('Error cancelling expense:', error)
       toast.error('Error al cancelar el gasto')
+      return false
+    } finally {
+      setIsLoading(false)
+    }
+  }, [groups, saveGroups])
+
+  const cancelDebt = useCallback(async (groupId: string, from: string, to: string, amount: number, reason: string): Promise<boolean> => {
+    setIsLoading(true)
+    try {
+      const updatedGroups = groups.map(group => {
+        if (group.id === groupId) {
+          // Crear un pago cancelado para registrar la cancelación de deuda
+          const cancelledPayment: Payment = {
+            id: `cancelled_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+            from,
+            to,
+            amount,
+            status: 'cancelled',
+            createdAt: new Date().toISOString(),
+            completedAt: new Date().toISOString(),
+            completedBy: from,
+            notes: `Deuda cancelada: ${reason}`
+          }
+
+          return {
+            ...group,
+            payments: [...group.payments, cancelledPayment]
+          }
+        }
+        return group
+      })
+
+      saveGroups(updatedGroups)
+      toast.success('Deuda cancelada')
+      console.log('❌ Deuda cancelada:', { from, to, amount, reason })
+      
+      return true
+    } catch (error) {
+      console.error('Error cancelling debt:', error)
+      toast.error('Error al cancelar la deuda')
       return false
     } finally {
       setIsLoading(false)
@@ -551,6 +603,7 @@ export const GroupProvider: React.FC<{ children: ReactNode }> = ({ children }) =
     addExpense,
     deleteExpense,
     cancelExpense,
+    cancelDebt,
     getGroup,
     updateGroup,
     deleteGroup,

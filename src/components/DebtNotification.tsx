@@ -17,7 +17,7 @@ const DebtNotification: React.FC = () => {
       
       if (userDebts.length > 0) {
         setShowNotification(true)
-        toast.success(`Tienes ${userDebts.length} deuda(s) pendiente(s)`)
+        // Removido toast.success para evitar interferencia
       }
     } else {
       setDebts([])
@@ -32,7 +32,7 @@ const DebtNotification: React.FC = () => {
   const totalDebt = debts.reduce((sum, debt) => sum + debt.amount, 0)
 
   return (
-    <div className="fixed top-4 right-4 z-50 max-w-md">
+    <div className="fixed top-4 right-4 z-40 max-w-md">
       <div className="bg-red-50 border border-red-200 rounded-xl shadow-lg p-4">
         <div className="flex items-start justify-between mb-3">
           <div className="flex items-center space-x-2">
