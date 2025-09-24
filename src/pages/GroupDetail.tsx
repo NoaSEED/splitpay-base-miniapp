@@ -46,13 +46,8 @@ const GroupDetail: React.FC = () => {
   }
 
   const handlePaymentCompleted = () => {
-    // Forzar refresh de la vista
-    setRefreshKey(prev => prev + 1)
-    loadGroup() // Recargar datos del grupo
-    // Forzar re-render de DebtManagement
-    setTimeout(() => {
-      setRefreshKey(prev => prev + 1)
-    }, 100)
+    // Recargar datos del grupo
+    loadGroup()
   }
 
   const handleAddExpense = async (e: React.FormEvent) => {
@@ -242,11 +237,10 @@ const GroupDetail: React.FC = () => {
 
            {/* Debt Management */}
            {account && (
-             <DebtManagement 
-               groupId={group.id} 
-               onPaymentCompleted={handlePaymentCompleted}
-               key={refreshKey}
-             />
+            <DebtManagement 
+              groupId={group.id} 
+              onPaymentCompleted={handlePaymentCompleted}
+            />
            )}
 
            {/* Pending Payments */}
