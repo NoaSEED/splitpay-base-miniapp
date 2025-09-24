@@ -165,14 +165,20 @@ const DebtManagement: React.FC<DebtManagementProps> = ({ groupId, onPaymentCompl
 
       {showCompleteModal && selectedDebt && (
         <CompletePayment
-          groupId={groupId}
+          paymentId={`debt-${Date.now()}`}
           from={selectedDebt.from}
           to={selectedDebt.to}
           amount={selectedDebt.amount}
-          onClose={() => {
+          onComplete={(paymentId, transactionHash) => {
+            // Aquí se manejaría la lógica de completar el pago
+            console.log('Payment completed:', { paymentId, transactionHash })
             setShowCompleteModal(false)
             setSelectedDebt(null)
             handleDebtCancelled()
+          }}
+          onClose={() => {
+            setShowCompleteModal(false)
+            setSelectedDebt(null)
           }}
         />
       )}
