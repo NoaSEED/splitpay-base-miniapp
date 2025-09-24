@@ -258,10 +258,10 @@ export const GroupProvider: React.FC<{ children: ReactNode }> = ({ children }) =
               : expense
           )
           
-          // También cancelar todos los pagos relacionados con este gasto
+          // Cancelar todos los pagos pendientes relacionados con este gasto
           const updatedPayments = group.payments.map(payment => {
-            // Si el pago está relacionado con este gasto (mismo monto y participantes)
-            if (payment.amount === expenseToCancel.amount && 
+            // Cancelar pagos pendientes que involucran al que pagó el gasto
+            if (payment.status === 'pending' && 
                 (payment.from === expenseToCancel.paidBy || payment.to === expenseToCancel.paidBy)) {
               return { ...payment, status: 'cancelled' as const }
             }

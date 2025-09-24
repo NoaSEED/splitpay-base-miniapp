@@ -14,9 +14,9 @@ const DebtNotification: React.FC = () => {
       const userDebts = getParticipantDebts(account)
       setDebts(userDebts)
       
-      if (userDebts.length > 0) {
+      // Solo mostrar automáticamente si hay deudas y no se ha cerrado
+      if (userDebts.length > 0 && !showNotification) {
         setShowNotification(true)
-        // Removido toast.success para evitar interferencia
       }
     } else {
       setDebts([])
