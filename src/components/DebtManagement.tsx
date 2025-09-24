@@ -11,7 +11,7 @@ interface DebtManagementProps {
 
 const DebtManagement: React.FC<DebtManagementProps> = ({ groupId, onPaymentCompleted }) => {
   const { account } = useWeb3()
-  const { getTotalOwed, completePayment } = useGroups()
+  const { getTotalOwed, completePayment, createPayment } = useGroups()
   const [isLoading, setIsLoading] = useState(false)
   
   // Recalcular deuda cada vez que cambie algo
@@ -30,20 +30,33 @@ const DebtManagement: React.FC<DebtManagementProps> = ({ groupId, onPaymentCompl
       const paymentId = `debt-${Date.now()}`
       const transactionHash = `tx-${Date.now()}` // Simular TX hash
       
-      const success = await completePayment(
+      // Crear el pago
+      const paymentCreated = await createPayment(
         groupId,
-        paymentId,
-        transactionHash,
-        account
+        account, // from
+        'group', // to
+        groupDebt.amount
       )
       
-      if (success) {
-        toast.success('Deuda pagada exitosamente')
-        if (onPaymentCompleted) {
-          onPaymentCompleted()
+      if (paymentCreated) {
+        // Completar el pago
+        const success = await completePayment(
+          groupId,
+          paymentId,
+          transactionHash,
+          account
+        )
+        
+        if (success) {
+          toast.success('Deuda pagada exitosamente')
+          if (onPaymentCompleted) {
+            onPaymentCompleted()
+          }
+        } else {
+          toast.error('Error al completar el pago')
         }
       } else {
-        toast.error('Error al pagar la deuda')
+        toast.error('Error al crear el pago')
       }
     } catch (error) {
       console.error('Error paying debt:', error)
