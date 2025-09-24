@@ -6,7 +6,9 @@
   "scripts": {
     "dev": "vite --host",
     "build": "tsc && vite build",
-    "preview": "vite preview --host"
+    "preview": "vite preview --host",
+    "base:deploy": "echo 'Deploying to Base Mini Apps...'",
+    "base:validate": "echo 'Validating Base Mini App manifest...'"
   },
   "dependencies": {
     "react": "^18.2.0",
