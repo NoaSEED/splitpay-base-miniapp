@@ -1,4 +1,4 @@
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
 import { useWeb3 } from '../contexts/Web3Context'
 import { useGroups } from '../contexts/GroupContext'
 import { AlertCircle, Bell, CheckCircle, XCircle } from 'lucide-react'
@@ -10,7 +10,7 @@ interface DebtManagementProps {
   onPaymentCompleted?: () => void
 }
 
-const DebtManagement: React.FC<DebtManagementProps> = ({ groupId }) => {
+const DebtManagement: React.FC<DebtManagementProps> = ({ groupId, onPaymentCompleted }) => {
   const { account } = useWeb3()
   const { getParticipantDebts } = useGroups()
   const [showRequestModal, setShowRequestModal] = useState(false)
@@ -20,9 +20,17 @@ const DebtManagement: React.FC<DebtManagementProps> = ({ groupId }) => {
     to: string
     amount: number
   } | null>(null)
+  const [refreshKey, setRefreshKey] = useState(0)
 
   const debts = account ? getParticipantDebts(account) : []
   const groupDebt = debts.find(debt => debt.groupId === groupId)
+
+  // Refrescar cuando se completa un pago
+  useEffect(() => {
+    if (onPaymentCompleted) {
+      setRefreshKey(prev => prev + 1)
+    }
+  }, [onPaymentCompleted])
 
   const handleRequestPayment = (from: string, to: string, amount: number) => {
     setSelectedDebt({ from, to, amount })
@@ -32,6 +40,14 @@ const DebtManagement: React.FC<DebtManagementProps> = ({ groupId }) => {
   const handleCancelDebt = (from: string, to: string, amount: number) => {
     setSelectedDebt({ from, to, amount })
     setShowCancelModal(true)
+  }
+
+  const handleDebtCancelled = () => {
+    // Forzar refresh cuando se cancela una deuda
+    setRefreshKey(prev => prev + 1)
+    if (onPaymentCompleted) {
+      onPaymentCompleted()
+    }
   }
 
   const formatCurrency = (amount: number) => {
@@ -133,6 +149,7 @@ const DebtManagement: React.FC<DebtManagementProps> = ({ groupId }) => {
           onClose={() => {
             setShowCancelModal(false)
             setSelectedDebt(null)
+            handleDebtCancelled()
           }}
         />
       )}
