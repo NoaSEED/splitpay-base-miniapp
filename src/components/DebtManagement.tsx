@@ -13,7 +13,7 @@ interface DebtManagementProps {
 
 const DebtManagement: React.FC<DebtManagementProps> = ({ groupId, onPaymentCompleted }) => {
   const { account } = useWeb3()
-  const { getTotalOwed } = useGroups()
+  const { getTotalOwed, completePayment } = useGroups()
   const [showRequestModal, setShowRequestModal] = useState(false)
   const [showCancelModal, setShowCancelModal] = useState(false)
   const [showCompleteModal, setShowCompleteModal] = useState(false)
@@ -169,12 +169,21 @@ const DebtManagement: React.FC<DebtManagementProps> = ({ groupId, onPaymentCompl
           from={selectedDebt.from}
           to={selectedDebt.to}
           amount={selectedDebt.amount}
-          onComplete={(paymentId, transactionHash) => {
-            // Aquí se manejaría la lógica de completar el pago
-            console.log('Payment completed:', { paymentId, transactionHash })
-            setShowCompleteModal(false)
-            setSelectedDebt(null)
-            handleDebtCancelled()
+          onComplete={async (paymentId, transactionHash) => {
+            // Crear un pago directo para cancelar la deuda
+            if (account && selectedDebt) {
+              const success = await completePayment(
+                groupId,
+                paymentId,
+                transactionHash,
+                account
+              )
+              if (success) {
+                setShowCompleteModal(false)
+                setSelectedDebt(null)
+                handleDebtCancelled()
+              }
+            }
           }}
           onClose={() => {
             setShowCompleteModal(false)
