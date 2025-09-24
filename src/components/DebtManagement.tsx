@@ -11,7 +11,7 @@ interface DebtManagementProps {
 
 const DebtManagement: React.FC<DebtManagementProps> = ({ groupId, onPaymentCompleted }) => {
   const { account } = useWeb3()
-  const { getTotalOwed, groups, setGroups } = useGroups()
+  const { getTotalOwed, groups } = useGroups()
   const [isLoading, setIsLoading] = useState(false)
   
   // Recalcular deuda cada vez que cambie algo
@@ -50,16 +50,20 @@ const DebtManagement: React.FC<DebtManagementProps> = ({ groupId, onPaymentCompl
         return group
       })
       
-      // Actualizar el estado
-      setGroups(updatedGroups)
-      
       // Guardar en localStorage
       localStorage.setItem('groups', JSON.stringify(updatedGroups))
       
-      toast.success('Deuda pagada exitosamente')
+      // Forzar re-render del componente padre
       if (onPaymentCompleted) {
         onPaymentCompleted()
       }
+      
+      // Forzar re-render del componente actual
+      setTimeout(() => {
+        window.location.reload()
+      }, 1000)
+      
+      toast.success('Deuda pagada exitosamente')
     } catch (error) {
       console.error('Error paying debt:', error)
       toast.error('Error al pagar la deuda')
