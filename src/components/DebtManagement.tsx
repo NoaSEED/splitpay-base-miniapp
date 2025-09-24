@@ -5,9 +5,10 @@ import toast from 'react-hot-toast'
 
 interface DebtManagementProps {
   groupId: string
+  onPaymentCompleted?: () => void
 }
 
-const DebtManagement: React.FC<DebtManagementProps> = ({ groupId }) => {
+const DebtManagement: React.FC<DebtManagementProps> = ({ groupId, onPaymentCompleted }) => {
   const { account } = useWeb3()
   const [debtAmount, setDebtAmount] = useState(0)
   const [showPaymentModal, setShowPaymentModal] = useState(false)
@@ -111,6 +112,11 @@ const DebtManagement: React.FC<DebtManagementProps> = ({ groupId }) => {
       setDebtAmount(0)
       setShowPaymentModal(false)
       setTransactionHash('')
+      
+      // Notificar al componente padre
+      if (onPaymentCompleted) {
+        onPaymentCompleted()
+      }
       
       // Forzar recálculo
       calculateDebt()

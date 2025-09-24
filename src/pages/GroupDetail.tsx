@@ -141,18 +141,6 @@ const GroupDetail: React.FC = () => {
     })
   }
 
-  const getTotalOwed = (participant: string) => {
-    if (!group) return 0
-    const totalExpenses = group.expenses.reduce((sum: number, expense: any) => sum + (expense.amount || 0), 0)
-    const participantCount = group.participants.length
-    const sharePerPerson = totalExpenses / participantCount
-
-    const paidByParticipant = group.expenses
-      .filter((expense: any) => expense.paidBy?.toLowerCase() === participant.toLowerCase())
-      .reduce((sum: number, expense: any) => sum + (expense.amount || 0), 0)
-
-    return sharePerPerson - paidByParticipant
-  }
 
   if (!isConnected) {
     return (
