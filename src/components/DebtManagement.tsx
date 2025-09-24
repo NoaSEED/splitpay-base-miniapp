@@ -1,6 +1,5 @@
-import React, { useState, useEffect } from 'react'
+import React, { useState } from 'react'
 import { useWeb3 } from '../contexts/Web3Context'
-import { useGroups } from '../contexts/GroupContext'
 import { AlertCircle, CheckCircle } from 'lucide-react'
 import toast from 'react-hot-toast'
 
@@ -11,32 +10,40 @@ interface DebtManagementProps {
 
 const DebtManagement: React.FC<DebtManagementProps> = ({ groupId, onPaymentCompleted }) => {
   const { account } = useWeb3()
-  const { getTotalOwed } = useGroups()
   const [isLoading, setIsLoading] = useState(false)
-  
-  // Recalcular deuda cada vez que cambie algo
-  const groupDebt = account ? {
-    groupId,
-    groupName: 'Grupo',
-    amount: getTotalOwed(groupId, account)
-  } : null
+  const [debtAmount, setDebtAmount] = useState(0)
 
-  // Escuchar cambios en localStorage para actualizar automáticamente
-  useEffect(() => {
-    const handleStorageChange = () => {
-      // Forzar re-render cuando cambie localStorage
-      window.location.reload()
-    }
-
-    window.addEventListener('storage', handleStorageChange)
+  // Calcular deuda de manera simple
+  React.useEffect(() => {
+    if (!account) return
     
-    return () => {
-      window.removeEventListener('storage', handleStorageChange)
-    }
-  }, [])
+    const groups = JSON.parse(localStorage.getItem('groups') || '[]')
+    const group = groups.find((g: any) => g.id === groupId)
+    if (!group) return
+
+    // Gastos activos
+    const activeExpenses = group.expenses.filter((expense: any) => expense.status !== 'cancelled')
+    const totalExpenses = activeExpenses.reduce((sum: number, expense: any) => sum + (expense.amount || 0), 0)
+    const participantCount = group.participants.length
+    const sharePerPerson = totalExpenses / participantCount
+
+    // Lo que ha pagado en gastos
+    const paidByParticipant = activeExpenses
+      .filter((expense: any) => expense.paidBy?.toLowerCase() === account.toLowerCase())
+      .reduce((sum: number, expense: any) => sum + (expense.amount || 0), 0)
+
+    // Lo que ha recibido en pagos completados
+    const receivedPayments = group.payments
+      .filter((payment: any) => payment.to?.toLowerCase() === account.toLowerCase() && payment.status === 'completed')
+      .reduce((sum: number, payment: any) => sum + payment.amount, 0)
+
+    // Deuda = lo que debe - lo que ha pagado - lo que ha recibido
+    const debt = sharePerPerson - paidByParticipant - receivedPayments
+    setDebtAmount(Math.max(0, debt))
+  }, [account, groupId])
 
   const handlePayDebt = async () => {
-    if (!account || !groupDebt) return
+    if (!account || debtAmount <= 0) return
     
     setIsLoading(true)
     try {
@@ -47,18 +54,15 @@ const DebtManagement: React.FC<DebtManagementProps> = ({ groupId, onPaymentCompl
       const updatedGroups = currentGroups.map((group: any) => {
         if (group.id === groupId) {
           // Encontrar a quién le debe (el que pagó los gastos)
-          const group = currentGroups.find((g: any) => g.id === groupId)
-          const expenses = group?.expenses || []
+          const expenses = group.expenses || []
           const activeExpenses = expenses.filter((expense: any) => expense.status !== 'cancelled')
-          
-          // Encontrar quién pagó los gastos (el que debe recibir)
           const paidBy = activeExpenses.length > 0 ? activeExpenses[0].paidBy : account
           
           const completedPayment = {
             id: `paid-${Date.now()}`,
             from: account,
             to: paidBy,
-            amount: groupDebt.amount,
+            amount: debtAmount,
             status: 'completed',
             transactionHash: `tx-${Date.now()}`,
             createdAt: new Date().toISOString(),
@@ -78,17 +82,15 @@ const DebtManagement: React.FC<DebtManagementProps> = ({ groupId, onPaymentCompl
       // Guardar en localStorage
       localStorage.setItem('groups', JSON.stringify(updatedGroups))
       
+      // Actualizar el estado local
+      setDebtAmount(0)
+      
       toast.success('Deuda pagada exitosamente')
       
-      // Notificar al componente padre para que se actualice
+      // Notificar al componente padre
       if (onPaymentCompleted) {
         onPaymentCompleted()
       }
-      
-      // Recargar la página inmediatamente
-      setTimeout(() => {
-        window.location.reload()
-      }, 500)
       
     } catch (error) {
       console.error('Error paying debt:', error)
@@ -107,7 +109,7 @@ const DebtManagement: React.FC<DebtManagementProps> = ({ groupId, onPaymentCompl
     }).format(amount)
   }
 
-  if (!groupDebt || groupDebt.amount <= 0) {
+  if (!account || debtAmount <= 0) {
     return null
   }
 
@@ -122,11 +124,11 @@ const DebtManagement: React.FC<DebtManagementProps> = ({ groupId, onPaymentCompl
         <div className="flex items-center justify-between mb-4">
           <div>
             <p className="text-sm text-gray-600">Monto adeudado</p>
-            <p className="text-2xl font-bold text-red-700">{formatCurrency(groupDebt.amount)} USDC</p>
+            <p className="text-2xl font-bold text-red-700">{formatCurrency(debtAmount)} USDC</p>
           </div>
           <div className="text-right">
             <p className="text-sm text-gray-600">Grupo</p>
-            <p className="font-medium text-gray-900">{groupDebt.groupName}</p>
+            <p className="font-medium text-gray-900">Grupo</p>
           </div>
         </div>
 
