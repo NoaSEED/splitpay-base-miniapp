@@ -10,7 +10,7 @@ interface Payment {
   from: string // Quien debe pagar
   to: string // Quien recibe el pago
   amount: number
-  status: 'pending' | 'completed' | 'disputed'
+  status: 'pending' | 'completed' | 'disputed' | 'cancelled'
   transactionHash?: string // Hash de la transacción
   proofImage?: string // Imagen del comprobante
   createdAt: string

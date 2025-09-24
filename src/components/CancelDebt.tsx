@@ -19,7 +19,7 @@ const CancelDebt: React.FC<CancelDebtProps> = ({
   amount,
   onClose
 }) => {
-  const { account, formatAddress } = useWeb3()
+  const { formatAddress } = useWeb3()
   const { getParticipantName, cancelDebt } = useGroups()
   const [isLoading, setIsLoading] = useState(false)
   const [reason, setReason] = useState('')
