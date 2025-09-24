@@ -511,6 +511,11 @@ export const GroupProvider: React.FC<{ children: ReactNode }> = ({ children }) =
     try {
       const updatedGroups = groups.map(group => {
         if (group.id === groupId) {
+          // Primero, encontrar el pago que se está completando
+          const completedPayment = group.payments.find(p => p.id === paymentId)
+          if (!completedPayment) return group
+
+          // Actualizar el pago completado
           const updatedPayments = group.payments.map(payment => {
             if (payment.id === paymentId) {
               return {
@@ -524,56 +529,47 @@ export const GroupProvider: React.FC<{ children: ReactNode }> = ({ children }) =
             return payment
           })
 
-          // Crear notificación automática y cancelar deuda relacionada
-          const completedPayment = group.payments.find(p => p.id === paymentId)
-          if (completedPayment) {
-            // Guardar notificación en localStorage
-            const notification = {
-              id: `payment_completed_${paymentId}`,
-              type: 'payment_completed',
-              groupId: group.id,
-              groupName: group.name,
-              message: `Pago de $${completedPayment.amount.toFixed(2)} USDC completado`,
-              amount: completedPayment.amount,
-              from: completedPayment.from,
-              to: completedPayment.to,
-              timestamp: new Date().toISOString(),
-              read: false
-            }
-
-            // Guardar notificación para el que recibió el pago
-            const toNotifications = JSON.parse(localStorage.getItem(`notifications_${completedPayment.to}`) || '[]')
-            toNotifications.push(notification)
-            localStorage.setItem(`notifications_${completedPayment.to}`, JSON.stringify(toNotifications))
-
-            // CANCELAR AUTOMÁTICAMENTE LA DEUDA RELACIONADA
-            // Buscar y cancelar pagos pendientes relacionados con este pago
-            const updatedPaymentsWithCancellation = updatedPayments.map(payment => {
-              // Si es un pago pendiente que involucra a los mismos participantes
-              if (payment.status === 'pending' && 
-                  payment.from === completedPayment.from && 
-                  payment.to === completedPayment.to &&
-                  payment.amount === completedPayment.amount) {
-                return {
-                  ...payment,
-                  status: 'cancelled' as const,
-                  completedAt: new Date().toISOString(),
-                  completedBy: completedBy,
-                  notes: `Deuda cancelada automáticamente por pago completado`
-                }
+          // CANCELAR AUTOMÁTICAMENTE TODAS LAS DEUDAS RELACIONADAS
+          const finalPayments = updatedPayments.map(payment => {
+            // Si es un pago pendiente que involucra a los mismos participantes
+            if (payment.status === 'pending' && 
+                payment.from === completedPayment.from && 
+                payment.to === completedPayment.to &&
+                payment.amount === completedPayment.amount &&
+                payment.id !== paymentId) {
+              return {
+                ...payment,
+                status: 'cancelled' as const,
+                completedAt: new Date().toISOString(),
+                completedBy: completedBy,
+                notes: `Deuda cancelada automáticamente por pago completado`
               }
-              return payment
-            })
-
-            return {
-              ...group,
-              payments: updatedPaymentsWithCancellation
             }
+            return payment
+          })
+
+          // Crear notificación automática
+          const notification = {
+            id: `payment_completed_${paymentId}`,
+            type: 'payment_completed',
+            groupId: group.id,
+            groupName: group.name,
+            message: `Pago de $${completedPayment.amount.toFixed(2)} USDC completado`,
+            amount: completedPayment.amount,
+            from: completedPayment.from,
+            to: completedPayment.to,
+            timestamp: new Date().toISOString(),
+            read: false
           }
+
+          // Guardar notificación para el que recibió el pago
+          const toNotifications = JSON.parse(localStorage.getItem(`notifications_${completedPayment.to}`) || '[]')
+          toNotifications.push(notification)
+          localStorage.setItem(`notifications_${completedPayment.to}`, JSON.stringify(toNotifications))
 
           return {
             ...group,
-            payments: updatedPayments
+            payments: finalPayments
           }
         }
         return group
