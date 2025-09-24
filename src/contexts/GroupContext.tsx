@@ -406,17 +406,32 @@ export const GroupProvider: React.FC<{ children: ReactNode }> = ({ children }) =
     const group = groups.find(g => g.id === groupId)
     if (!group) return 0
 
-    // Calcular cuánto debe cada participante
-    const totalExpenses = group.expenses.reduce((sum, expense) => sum + (expense.amount || 0), 0)
+    // Calcular cuánto debe cada participante basándose en gastos activos
+    const activeExpenses = group.expenses.filter(expense => expense.status !== 'cancelled')
+    const totalExpenses = activeExpenses.reduce((sum, expense) => sum + (expense.amount || 0), 0)
     const participantCount = group.participants.length
     const sharePerPerson = totalExpenses / participantCount
 
     // Calcular cuánto ha pagado cada participante
-    const paidByParticipant = group.expenses
+    const paidByParticipant = activeExpenses
       .filter(expense => expense.paidBy?.toLowerCase() === participant.toLowerCase())
       .reduce((sum, expense) => sum + (expense.amount || 0), 0)
 
-    return sharePerPerson - paidByParticipant
+    // Calcular cuánto ha recibido en pagos completados
+    const receivedPayments = group.payments
+      .filter(payment => payment.to?.toLowerCase() === participant.toLowerCase() && payment.status === 'completed')
+      .reduce((sum, payment) => sum + payment.amount, 0)
+
+    // Calcular cuánto ha pagado en pagos completados
+    const madePayments = group.payments
+      .filter(payment => payment.from?.toLowerCase() === participant.toLowerCase() && payment.status === 'completed')
+      .reduce((sum, payment) => sum + payment.amount, 0)
+
+    // La deuda real es: lo que debe pagar - lo que ha pagado + lo que ha recibido
+    const baseDebt = sharePerPerson - paidByParticipant
+    const actualDebt = baseDebt - receivedPayments + madePayments
+
+    return Math.max(0, actualDebt) // No puede ser negativo
   }, [groups])
 
   // ===========================================
