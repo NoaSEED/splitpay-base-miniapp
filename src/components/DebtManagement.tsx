@@ -11,7 +11,7 @@ interface DebtManagementProps {
 
 const DebtManagement: React.FC<DebtManagementProps> = ({ groupId, onPaymentCompleted }) => {
   const { account } = useWeb3()
-  const { getTotalOwed, groups } = useGroups()
+  const { getTotalOwed } = useGroups()
   const [isLoading, setIsLoading] = useState(false)
   
   // Recalcular deuda cada vez que cambie algo
@@ -26,15 +26,18 @@ const DebtManagement: React.FC<DebtManagementProps> = ({ groupId, onPaymentCompl
     
     setIsLoading(true)
     try {
+      // Obtener grupos actuales
+      const currentGroups = JSON.parse(localStorage.getItem('groups') || '[]')
+      
       // Encontrar el grupo y agregar un pago completado
-      const updatedGroups = groups.map(group => {
+      const updatedGroups = currentGroups.map((group: any) => {
         if (group.id === groupId) {
           const completedPayment = {
             id: `paid-${Date.now()}`,
             from: account,
             to: 'group',
             amount: groupDebt.amount,
-            status: 'completed' as const,
+            status: 'completed',
             transactionHash: `tx-${Date.now()}`,
             createdAt: new Date().toISOString(),
             completedAt: new Date().toISOString(),
@@ -44,7 +47,7 @@ const DebtManagement: React.FC<DebtManagementProps> = ({ groupId, onPaymentCompl
           
           return {
             ...group,
-            payments: [...group.payments, completedPayment]
+            payments: [...(group.payments || []), completedPayment]
           }
         }
         return group
@@ -53,17 +56,13 @@ const DebtManagement: React.FC<DebtManagementProps> = ({ groupId, onPaymentCompl
       // Guardar en localStorage
       localStorage.setItem('groups', JSON.stringify(updatedGroups))
       
-      // Forzar re-render del componente padre
-      if (onPaymentCompleted) {
-        onPaymentCompleted()
-      }
+      toast.success('Deuda pagada exitosamente')
       
-      // Forzar re-render del componente actual
+      // Recargar la página inmediatamente
       setTimeout(() => {
         window.location.reload()
-      }, 1000)
+      }, 500)
       
-      toast.success('Deuda pagada exitosamente')
     } catch (error) {
       console.error('Error paying debt:', error)
       toast.error('Error al pagar la deuda')
