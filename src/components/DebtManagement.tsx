@@ -4,6 +4,7 @@ import { useGroups } from '../contexts/GroupContext'
 import { AlertCircle, Bell, CheckCircle, XCircle } from 'lucide-react'
 import RequestPayment from './RequestPayment'
 import CancelDebt from './CancelDebt'
+import CompletePayment from './CompletePayment'
 
 interface DebtManagementProps {
   groupId: string
@@ -15,6 +16,7 @@ const DebtManagement: React.FC<DebtManagementProps> = ({ groupId, onPaymentCompl
   const { getTotalOwed } = useGroups()
   const [showRequestModal, setShowRequestModal] = useState(false)
   const [showCancelModal, setShowCancelModal] = useState(false)
+  const [showCompleteModal, setShowCompleteModal] = useState(false)
   const [selectedDebt, setSelectedDebt] = useState<{
     from: string
     to: string
@@ -50,6 +52,11 @@ const DebtManagement: React.FC<DebtManagementProps> = ({ groupId, onPaymentCompl
   const handleCancelDebt = (from: string, to: string, amount: number) => {
     setSelectedDebt({ from, to, amount })
     setShowCancelModal(true)
+  }
+
+  const handleCompletePayment = (from: string, to: string, amount: number) => {
+    setSelectedDebt({ from, to, amount })
+    setShowCompleteModal(true)
   }
 
   const handleDebtCancelled = () => {
@@ -111,13 +118,7 @@ const DebtManagement: React.FC<DebtManagementProps> = ({ groupId, onPaymentCompl
             </button>
             
             <button
-              onClick={() => {
-                // Scroll to pending payments section
-                const pendingSection = document.querySelector('[data-pending-payments]')
-                if (pendingSection) {
-                  pendingSection.scrollIntoView({ behavior: 'smooth' })
-                }
-              }}
+              onClick={() => handleCompletePayment(account!, 'group', groupDebt.amount)}
               className="flex items-center justify-center space-x-2 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors"
             >
               <CheckCircle size={16} />
@@ -156,6 +157,20 @@ const DebtManagement: React.FC<DebtManagementProps> = ({ groupId, onPaymentCompl
           amount={selectedDebt.amount}
           onClose={() => {
             setShowCancelModal(false)
+            setSelectedDebt(null)
+            handleDebtCancelled()
+          }}
+        />
+      )}
+
+      {showCompleteModal && selectedDebt && (
+        <CompletePayment
+          groupId={groupId}
+          from={selectedDebt.from}
+          to={selectedDebt.to}
+          amount={selectedDebt.amount}
+          onClose={() => {
+            setShowCompleteModal(false)
             setSelectedDebt(null)
             handleDebtCancelled()
           }}
