@@ -76,54 +76,54 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
       <DebtNotification />
       <PaymentNotifications />
 
-           {/* Footer */}
-           <footer className="bg-gradient-to-r from-base-50 to-base-100 border-t border-base-200 mt-auto">
-             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-               <div className="flex flex-col md:flex-row justify-between items-center space-y-4 md:space-y-0">
-                 <div className="flex items-center space-x-2 text-sm text-gray-600">
-                   <Wallet className="w-4 h-4" />
-                   <span>Powered by Base Network</span>
-                 </div>
-                 
-                 <div className="flex items-center space-x-4 text-sm text-gray-600">
-                   <span>© 2024 SplitPay</span>
-                   <span>•</span>
-                   <span>Gastos Compartidos en Base</span>
-                 </div>
+      {/* Footer */}
+      <footer className="bg-gradient-to-r from-base-50 to-base-100 border-t border-base-200 mt-auto">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+          <div className="flex flex-col md:flex-row justify-between items-center space-y-4 md:space-y-0">
+            <div className="flex items-center space-x-2 text-sm text-gray-600">
+              <Wallet className="w-4 h-4" />
+              <span>Powered by Base Network</span>
+            </div>
+            
+            <div className="flex items-center space-x-4 text-sm text-gray-600">
+              <span>© 2024 SplitPay</span>
+              <span>•</span>
+              <span>Gastos Compartidos en Base</span>
+            </div>
 
-                 {/* Creator Info - Delicate Design */}
-                 <div className="flex items-center space-x-2">
-                   <span className="text-sm text-gray-400">Creado por</span>
-                   <a
-                     href="https://x.com/SeedsPuntoEth"
-                     target="_blank"
-                     rel="noopener noreferrer"
-                     className="group flex items-center space-x-2 px-3 py-1.5 bg-white/50 hover:bg-white/80 border border-gray-200/50 hover:border-blue-300/50 rounded-full transition-all duration-300 hover:shadow-sm backdrop-blur-sm"
-                   >
-                     <div className="w-5 h-5 bg-gray-600 group-hover:bg-blue-500 rounded-full flex items-center justify-center transition-all duration-300">
-                       <Twitter className="w-3 h-3 text-white" />
-                     </div>
-                     <span className="text-sm font-medium text-gray-600 group-hover:text-blue-600 transition-colors">Noa</span>
-                     <span className="text-xs text-gray-400 group-hover:text-blue-500 transition-colors">@SeedsPuntoEth</span>
-                   </a>
-                 </div>
-               </div>
-               
-               {/* Additional Info */}
-               <div className="mt-4 pt-4 border-t border-base-200">
-                 <div className="flex flex-col md:flex-row justify-between items-center text-xs text-gray-500 space-y-2 md:space-y-0">
-                   <div className="flex items-center space-x-4">
-                     <span>🔒 Transacciones seguras en Base</span>
-                     <span>•</span>
-                     <span>💎 USDC como moneda estable</span>
-                   </div>
-                   <div className="flex items-center space-x-2">
-                     <span>Hecho con ❤️ para la comunidad Base</span>
-                   </div>
-                 </div>
-               </div>
-             </div>
-           </footer>
+            {/* Creator Info - Delicate Design */}
+            <div className="flex items-center space-x-2">
+              <span className="text-sm text-gray-400">Creado por</span>
+              <a
+                href="https://x.com/SeedsPuntoEth"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="group flex items-center space-x-2 px-3 py-1.5 bg-white/50 hover:bg-white/80 border border-gray-200/50 hover:border-blue-300/50 rounded-full transition-all duration-300 hover:shadow-sm backdrop-blur-sm"
+              >
+                <div className="w-5 h-5 bg-gray-600 group-hover:bg-blue-500 rounded-full flex items-center justify-center transition-all duration-300">
+                  <Twitter className="w-3 h-3 text-white" />
+                </div>
+                <span className="text-sm font-medium text-gray-600 group-hover:text-blue-600 transition-colors">Noa</span>
+                <span className="text-xs text-gray-400 group-hover:text-blue-500 transition-colors">@SeedsPuntoEth</span>
+              </a>
+            </div>
+          </div>
+          
+          {/* Additional Info */}
+          <div className="mt-4 pt-4 border-t border-base-200">
+            <div className="flex flex-col md:flex-row justify-between items-center text-xs text-gray-500 space-y-2 md:space-y-0">
+              <div className="flex items-center space-x-4">
+                <span>🔒 Transacciones seguras en Base</span>
+                <span>•</span>
+                <span>💎 USDC como moneda estable</span>
+              </div>
+              <div className="flex items-center space-x-2">
+                <span>Hecho con ❤️ para la comunidad Base</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </footer>
     </div>
   )
 }
