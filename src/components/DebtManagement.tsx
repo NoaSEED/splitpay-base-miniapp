@@ -15,7 +15,7 @@ const DebtManagement: React.FC<DebtManagementProps> = ({ groupId }) => {
   const [isLoading, setIsLoading] = useState(false)
 
   // Calcular deuda simple
-  useEffect(() => {
+  const calculateDebt = () => {
     if (!account) return
     
     const groups = JSON.parse(localStorage.getItem('groups') || '[]')
@@ -41,7 +41,24 @@ const DebtManagement: React.FC<DebtManagementProps> = ({ groupId }) => {
     // Deuda = lo que debe - lo que ha pagado - lo que ha recibido
     const debt = sharePerPerson - paidByParticipant - receivedPayments
     setDebtAmount(Math.max(0, debt))
+  }
+
+  useEffect(() => {
+    calculateDebt()
   }, [account, groupId])
+
+  // Escuchar cambios en localStorage
+  useEffect(() => {
+    const handleStorageChange = () => {
+      calculateDebt()
+    }
+
+    window.addEventListener('storage', handleStorageChange)
+    
+    return () => {
+      window.removeEventListener('storage', handleStorageChange)
+    }
+  }, [])
 
   const handlePayDebt = () => {
     setShowPaymentModal(true)
@@ -94,6 +111,9 @@ const DebtManagement: React.FC<DebtManagementProps> = ({ groupId }) => {
       setDebtAmount(0)
       setShowPaymentModal(false)
       setTransactionHash('')
+      
+      // Forzar recálculo
+      calculateDebt()
       
       toast.success('Deuda pagada exitosamente')
       
