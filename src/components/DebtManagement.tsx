@@ -1,20 +1,21 @@
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
 import { useWeb3 } from '../contexts/Web3Context'
 import { AlertCircle, CheckCircle } from 'lucide-react'
 import toast from 'react-hot-toast'
 
 interface DebtManagementProps {
   groupId: string
-  onPaymentCompleted?: () => void
 }
 
-const DebtManagement: React.FC<DebtManagementProps> = ({ groupId, onPaymentCompleted }) => {
+const DebtManagement: React.FC<DebtManagementProps> = ({ groupId }) => {
   const { account } = useWeb3()
-  const [isLoading, setIsLoading] = useState(false)
   const [debtAmount, setDebtAmount] = useState(0)
+  const [showPaymentModal, setShowPaymentModal] = useState(false)
+  const [transactionHash, setTransactionHash] = useState('')
+  const [isLoading, setIsLoading] = useState(false)
 
-  // Calcular deuda de manera simple
-  React.useEffect(() => {
+  // Calcular deuda simple
+  useEffect(() => {
     if (!account) return
     
     const groups = JSON.parse(localStorage.getItem('groups') || '[]')
@@ -42,9 +43,16 @@ const DebtManagement: React.FC<DebtManagementProps> = ({ groupId, onPaymentCompl
     setDebtAmount(Math.max(0, debt))
   }, [account, groupId])
 
-  const handlePayDebt = async () => {
-    if (!account || debtAmount <= 0) return
-    
+  const handlePayDebt = () => {
+    setShowPaymentModal(true)
+  }
+
+  const handleSubmitPayment = async () => {
+    if (!transactionHash.trim()) {
+      toast.error('Por favor ingresa el hash de la transacción')
+      return
+    }
+
     setIsLoading(true)
     try {
       // Obtener grupos actuales
@@ -64,7 +72,7 @@ const DebtManagement: React.FC<DebtManagementProps> = ({ groupId, onPaymentCompl
             to: paidBy,
             amount: debtAmount,
             status: 'completed',
-            transactionHash: `tx-${Date.now()}`,
+            transactionHash: transactionHash,
             createdAt: new Date().toISOString(),
             completedAt: new Date().toISOString(),
             completedBy: account,
@@ -84,13 +92,10 @@ const DebtManagement: React.FC<DebtManagementProps> = ({ groupId, onPaymentCompl
       
       // Actualizar el estado local
       setDebtAmount(0)
+      setShowPaymentModal(false)
+      setTransactionHash('')
       
       toast.success('Deuda pagada exitosamente')
-      
-      // Notificar al componente padre
-      if (onPaymentCompleted) {
-        onPaymentCompleted()
-      }
       
     } catch (error) {
       console.error('Error paying debt:', error)
@@ -114,46 +119,77 @@ const DebtManagement: React.FC<DebtManagementProps> = ({ groupId, onPaymentCompl
   }
 
   return (
-    <div className="bg-red-50 border border-red-200 rounded-xl p-6 mb-6">
-      <div className="flex items-center space-x-2 mb-4">
-        <AlertCircle className="w-5 h-5 text-red-600" />
-        <h3 className="text-lg font-semibold text-red-800">Tienes una deuda pendiente</h3>
-      </div>
-
-      <div className="bg-white rounded-lg p-4 border border-red-200">
-        <div className="flex items-center justify-between mb-4">
-          <div>
-            <p className="text-sm text-gray-600">Monto adeudado</p>
-            <p className="text-2xl font-bold text-red-700">{formatCurrency(debtAmount)} USDC</p>
-          </div>
-          <div className="text-right">
-            <p className="text-sm text-gray-600">Grupo</p>
-            <p className="font-medium text-gray-900">Grupo</p>
-          </div>
+    <>
+      <div className="bg-red-50 border border-red-200 rounded-xl p-6 mb-6">
+        <div className="flex items-center space-x-2 mb-4">
+          <AlertCircle className="w-5 h-5 text-red-600" />
+          <h3 className="text-lg font-semibold text-red-800">Tienes una deuda pendiente</h3>
         </div>
 
-        <div className="space-y-3">
-          <div className="bg-red-50 rounded-lg p-3">
-            <p className="text-sm text-red-800 font-medium mb-2">¿Qué puedes hacer?</p>
-            <ul className="text-sm text-red-700 space-y-1">
-              <li>• <strong>Pagar:</strong> Marca la deuda como pagada</li>
-              <li>• <strong>Verificar:</strong> Revisa el historial de pagos del grupo</li>
-            </ul>
+        <div className="bg-white rounded-lg p-4 border border-red-200">
+          <div className="flex items-center justify-between mb-4">
+            <div>
+              <p className="text-sm text-gray-600">Monto adeudado</p>
+              <p className="text-2xl font-bold text-red-700">{formatCurrency(debtAmount)} USDC</p>
+            </div>
           </div>
 
           <div className="flex justify-center">
             <button
               onClick={handlePayDebt}
-              disabled={isLoading}
-              className="flex items-center justify-center space-x-2 px-6 py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              className="flex items-center justify-center space-x-2 px-6 py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors"
             >
               <CheckCircle size={20} />
-              <span>{isLoading ? 'Pagando...' : 'Pagar Deuda'}</span>
+              <span>Pagar Deuda</span>
             </button>
           </div>
         </div>
       </div>
-    </div>
+
+      {/* Modal de pago */}
+      {showPaymentModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg p-6 w-96 max-w-md mx-4">
+            <h3 className="text-lg font-semibold mb-4">Completar Pago</h3>
+            
+            <div className="mb-4">
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Hash de la Transacción
+              </label>
+              <input
+                type="text"
+                value={transactionHash}
+                onChange={(e) => setTransactionHash(e.target.value)}
+                placeholder="0x..."
+                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+              />
+            </div>
+
+            <div className="mb-4">
+              <p className="text-sm text-gray-600">
+                Monto: <span className="font-semibold">{formatCurrency(debtAmount)} USDC</span>
+              </p>
+            </div>
+
+            <div className="flex space-x-3">
+              <button
+                onClick={() => setShowPaymentModal(false)}
+                className="flex-1 px-4 py-2 border border-gray-300 rounded-md hover:bg-gray-50"
+              >
+                Cancelar
+              </button>
+              <button
+                onClick={handleSubmitPayment}
+                disabled={isLoading}
+                className="flex-1 px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 disabled:opacity-50"
+              >
+                {isLoading ? 'Procesando...' : 'Confirmar Pago'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+    </>
   )
 }
 
