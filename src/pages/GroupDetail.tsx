@@ -13,7 +13,7 @@ const GroupDetail: React.FC = () => {
   const { id } = useParams<{ id: string }>()
   const navigate = useNavigate()
   const { isConnected, account, formatAddress } = useWeb3()
-  const { getGroup, addExpense, deleteExpense, cancelExpense, getParticipantName, deleteGroup, isLoading } = useGroups()
+  const { getGroup, addExpense, deleteExpense, cancelExpense, getParticipantName, deleteGroup, isLoading, getTotalOwed } = useGroups()
   
   const [group, setGroup] = useState<any>(null)
   const [showAddExpense, setShowAddExpense] = useState(false)
