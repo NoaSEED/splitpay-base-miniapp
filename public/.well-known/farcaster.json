@@ -25,10 +25,6 @@
     "ogTitle": "SplitPay - Gastos Compartidos en Base",
     "ogDescription": "Divide gastos con amigos usando USDC en Base Network.",
     "ogImageUrl": "https://splitpay-base-miniapp.vercel.app/og-image.png",
-    "screenshotUrls": [
-      "https://splitpay-base-miniapp.vercel.app/screenshot-portrait.png",
-      "https://splitpay-base-miniapp.vercel.app/screenshot-landscape.png"
-    ],
     "noindex": false
   }
 }
