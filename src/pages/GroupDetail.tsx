@@ -30,7 +30,6 @@ const GroupDetail: React.FC = () => {
     amount: '',
     paidBy: account || ''
   })
-  const [refreshKey, setRefreshKey] = useState(0)
 
   useEffect(() => {
     if (id) {
