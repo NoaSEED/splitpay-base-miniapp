@@ -134,3 +134,4 @@ const GroupCard: React.FC<GroupCardProps> = ({ group }) => {
 }
 
 export default GroupCard
+

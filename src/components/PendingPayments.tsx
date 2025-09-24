@@ -1,8 +1,10 @@
 import React, { useState } from 'react'
 import { useWeb3 } from '../contexts/Web3Context'
 import { useGroups, Payment } from '../contexts/GroupContext'
-import { AlertCircle, CheckCircle, Clock, User, DollarSign } from 'lucide-react'
+import { AlertCircle, CheckCircle, Clock, User, DollarSign, Bell, XCircle } from 'lucide-react'
 import CompletePayment from './CompletePayment'
+import RequestPayment from './RequestPayment'
+import CancelDebt from './CancelDebt'
 
 interface PendingPaymentsProps {
   groupId: string
@@ -12,6 +14,8 @@ const PendingPayments: React.FC<PendingPaymentsProps> = ({ groupId }) => {
   const { account, formatAddress } = useWeb3()
   const { getPendingPayments, completePayment, getParticipantName } = useGroups()
   const [showCompleteModal, setShowCompleteModal] = useState(false)
+  const [showRequestModal, setShowRequestModal] = useState(false)
+  const [showCancelModal, setShowCancelModal] = useState(false)
   const [selectedPayment, setSelectedPayment] = useState<Payment | null>(null)
 
   const pendingPayments = account ? getPendingPayments(groupId, account) : []
@@ -19,6 +23,16 @@ const PendingPayments: React.FC<PendingPaymentsProps> = ({ groupId }) => {
   const handleCompletePayment = (payment: Payment) => {
     setSelectedPayment(payment)
     setShowCompleteModal(true)
+  }
+
+  const handleRequestPayment = (payment: Payment) => {
+    setSelectedPayment(payment)
+    setShowRequestModal(true)
+  }
+
+  const handleCancelDebt = (payment: Payment) => {
+    setSelectedPayment(payment)
+    setShowCancelModal(true)
   }
 
   const handlePaymentComplete = async (paymentId: string, transactionHash: string) => {
@@ -84,18 +98,32 @@ const PendingPayments: React.FC<PendingPaymentsProps> = ({ groupId }) => {
 
                 <div className="flex items-center space-x-2">
                   <button
+                    onClick={() => handleRequestPayment(payment)}
+                    className="flex items-center space-x-1 px-3 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors text-sm"
+                  >
+                    <Bell size={14} />
+                    <span>Avisar</span>
+                  </button>
+                  <button
                     onClick={() => handleCompletePayment(payment)}
                     className="flex items-center space-x-1 px-3 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors text-sm"
                   >
                     <CheckCircle size={14} />
                     <span>Pagar</span>
                   </button>
+                  <button
+                    onClick={() => handleCancelDebt(payment)}
+                    className="flex items-center space-x-1 px-3 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors text-sm"
+                  >
+                    <XCircle size={14} />
+                    <span>Cancelar</span>
+                  </button>
                 </div>
               </div>
 
               <div className="mt-3 pt-3 border-t border-yellow-200">
                 <p className="text-xs text-yellow-700">
-                  💡 Haz clic en "Pagar" para marcar como completado y agregar el hash de la transacción
+                  💡 Usa "Avisar" para recordar, "Pagar" para completar, o "Cancelar" para anular la deuda
                 </p>
               </div>
             </div>
@@ -112,6 +140,32 @@ const PendingPayments: React.FC<PendingPaymentsProps> = ({ groupId }) => {
           onComplete={handlePaymentComplete}
           onClose={() => {
             setShowCompleteModal(false)
+            setSelectedPayment(null)
+          }}
+        />
+      )}
+
+      {showRequestModal && selectedPayment && (
+        <RequestPayment
+          groupId={groupId}
+          from={selectedPayment.from}
+          to={selectedPayment.to}
+          amount={selectedPayment.amount}
+          onClose={() => {
+            setShowRequestModal(false)
+            setSelectedPayment(null)
+          }}
+        />
+      )}
+
+      {showCancelModal && selectedPayment && (
+        <CancelDebt
+          groupId={groupId}
+          from={selectedPayment.from}
+          to={selectedPayment.to}
+          amount={selectedPayment.amount}
+          onClose={() => {
+            setShowCancelModal(false)
             setSelectedPayment(null)
           }}
         />

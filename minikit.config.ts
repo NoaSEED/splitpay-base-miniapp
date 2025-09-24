@@ -38,3 +38,4 @@ export const minikitConfig = {
 
 // Export the configuration
 export default minikitConfig;
+

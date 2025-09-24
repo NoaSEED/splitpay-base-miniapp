@@ -5,7 +5,7 @@ import { Bell, X, CheckCircle, AlertCircle, DollarSign } from 'lucide-react'
 
 interface PaymentNotification {
   id: string
-  type: 'payment_created' | 'payment_completed' | 'debt_reminder'
+  type: 'payment_created' | 'payment_completed' | 'debt_reminder' | 'payment_request'
   groupId: string
   groupName: string
   message: string
@@ -112,13 +112,15 @@ const PaymentNotifications: React.FC = () => {
         return <CheckCircle className="w-4 h-4 text-green-600" />
       case 'debt_reminder':
         return <AlertCircle className="w-4 h-4 text-red-600" />
+      case 'payment_request':
+        return <Bell className="w-4 h-4 text-orange-600" />
       default:
         return <Bell className="w-4 h-4 text-gray-600" />
     }
   }
 
 
-  if (!isConnected || notifications.length === 0) {
+  if (!isConnected) {
     return null
   }
 

@@ -225,3 +225,4 @@ Este proyecto está bajo la Licencia MIT. Ver el archivo [LICENSE](LICENSE) para
 
 </div>
 # Force Vercel redeploy Tue Sep 23 19:03:22 -03 2025
+

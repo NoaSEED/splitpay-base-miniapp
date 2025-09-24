@@ -2,21 +2,29 @@ import React, { useState, useEffect } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import { useWeb3 } from '../contexts/Web3Context'
 import { useGroups } from '../contexts/GroupContext'
-import { ArrowLeft, Plus, Users, DollarSign, Hash, Edit, User, Trash2 } from 'lucide-react'
+import { ArrowLeft, Plus, Users, DollarSign, Hash, User, XCircle, AlertTriangle } from 'lucide-react'
 import AddParticipantName from '../components/AddParticipantName'
 import PendingPayments from '../components/PendingPayments'
 import PaymentHistory from '../components/PaymentHistory'
+import DebtManagement from '../components/DebtManagement'
+import CancelDebt from '../components/CancelDebt'
 
 const GroupDetail: React.FC = () => {
   const { id } = useParams<{ id: string }>()
   const navigate = useNavigate()
   const { isConnected, account, formatAddress } = useWeb3()
-  const { getGroup, addExpense, deleteExpense, getParticipantName, deleteGroup, isLoading } = useGroups()
+  const { getGroup, addExpense, deleteExpense, cancelExpense, getParticipantName, deleteGroup, isLoading } = useGroups()
   
   const [group, setGroup] = useState<any>(null)
   const [showAddExpense, setShowAddExpense] = useState(false)
   const [showAddNameModal, setShowAddNameModal] = useState(false)
+  const [showCancelDebtModal, setShowCancelDebtModal] = useState(false)
   const [selectedParticipant, setSelectedParticipant] = useState('')
+  const [selectedDebt, setSelectedDebt] = useState<{
+    from: string
+    to: string
+    amount: number
+  } | null>(null)
   const [newExpense, setNewExpense] = useState({
     description: '',
     amount: '',
@@ -87,6 +95,26 @@ const GroupDetail: React.FC = () => {
         loadGroup() // Recargar datos
       }
     }
+  }
+
+  const handleCancelExpense = async (expenseId: string) => {
+    if (!id) return
+    
+    const confirmed = window.confirm(
+      '¿Estás seguro de que quieres cancelar este gasto? Se marcará como cancelado pero se mantendrá en el historial.'
+    )
+    
+    if (confirmed) {
+      const success = await cancelExpense(id, expenseId)
+      if (success) {
+        loadGroup() // Recargar datos
+      }
+    }
+  }
+
+  const handleCancelDebt = (from: string, to: string, amount: number) => {
+    setSelectedDebt({ from, to, amount })
+    setShowCancelDebtModal(true)
   }
 
   const formatCurrency = (amount: number) => {
@@ -201,10 +229,17 @@ const GroupDetail: React.FC = () => {
         </div>
       </div>
 
-      {/* Pending Payments */}
-      {account && (
-        <PendingPayments groupId={group.id} />
-      )}
+           {/* Debt Management */}
+           {account && (
+             <DebtManagement groupId={group.id} />
+           )}
+
+           {/* Pending Payments */}
+           {account && (
+             <div data-pending-payments>
+               <PendingPayments groupId={group.id} />
+             </div>
+           )}
 
       {/* Stats Cards */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
@@ -278,13 +313,39 @@ const GroupDetail: React.FC = () => {
                     </p>
                   </div>
                 </div>
-                <div className="text-right">
-                  <p className={`font-semibold ${owed > 0 ? 'text-red-600' : owed < 0 ? 'text-green-600' : 'text-gray-600'}`}>
-                    {owed > 0 ? `Debe ${formatCurrency(owed)}` : 
-                     owed < 0 ? `Le deben ${formatCurrency(Math.abs(owed))}` : 
-                     'En balance'}
-                  </p>
-                </div>
+                     <div className="flex items-center space-x-4">
+                       <div className="text-right">
+                         <p className={`font-semibold ${owed > 0 ? 'text-red-600' : owed < 0 ? 'text-green-600' : 'text-gray-600'}`}>
+                           {owed > 0 ? `Debe ${formatCurrency(owed)}` : 
+                            owed < 0 ? `Le deben ${formatCurrency(Math.abs(owed))}` : 
+                            'En balance'}
+                         </p>
+                       </div>
+                       
+                       {/* Botón de cancelar deuda - solo si el usuario actual debe dinero a este participante */}
+                       {account && owed > 0 && participant.toLowerCase() !== account.toLowerCase() && (
+                         <button
+                           onClick={() => handleCancelDebt(account, participant, owed)}
+                           className="flex items-center space-x-1 px-3 py-1 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors text-sm"
+                           title="Cancelar deuda con este participante"
+                         >
+                           <XCircle size={14} />
+                           <span>Cancelar Deuda</span>
+                         </button>
+                       )}
+                       
+                       {/* Botón de cancelar deuda - si este participante debe dinero al usuario actual */}
+                       {account && owed < 0 && participant.toLowerCase() !== account.toLowerCase() && (
+                         <button
+                           onClick={() => handleCancelDebt(participant, account, Math.abs(owed))}
+                           className="flex items-center space-x-1 px-3 py-1 bg-orange-600 text-white rounded-lg hover:bg-orange-700 transition-colors text-sm"
+                           title="Cancelar deuda de este participante"
+                         >
+                           <AlertTriangle size={14} />
+                           <span>Cancelar Su Deuda</span>
+                         </button>
+                       )}
+                     </div>
               </div>
             )
           })}
@@ -313,40 +374,69 @@ const GroupDetail: React.FC = () => {
               Agregar Primer Gasto
             </button>
           </div>
-        ) : (
-          <div className="space-y-4">
-            {group.expenses.map((expense: any, index: number) => (
-              <div key={index} className="flex items-center justify-between p-4 bg-base-50 rounded-lg">
-                <div className="flex-1">
-                  <h4 className="font-medium text-gray-900">{expense.description}</h4>
-                  <p className="text-sm text-gray-500">
-                    Pagado por: {expense.paidBy?.slice(0, 6)}...{expense.paidBy?.slice(-4)}
-                  </p>
-                  <p className="text-sm text-gray-500">
-                    {formatDate(expense.createdAt)}
-                  </p>
-                </div>
-                <div className="flex items-center space-x-4">
-                  <div className="text-right">
-                    <p className="text-lg font-semibold text-gray-900">
-                      {formatCurrency(expense.amount)}
-                    </p>
-                    <p className="text-sm text-gray-500">
-                      {formatCurrency(expense.amount / group.participants.length)} por persona
-                    </p>
-                  </div>
-                  <button
-                    onClick={() => handleDeleteExpense(expense.id)}
-                    className="p-2 text-red-500 hover:bg-red-50 rounded-lg transition-colors"
-                    title="Eliminar gasto"
-                  >
-                    <Trash2 size={16} />
-                  </button>
-                </div>
-              </div>
-            ))}
-          </div>
-        )}
+             ) : (
+               <div className="space-y-4">
+                 {group.expenses.map((expense: any, index: number) => (
+                   <div key={index} className={`flex items-center justify-between p-4 rounded-lg ${
+                     expense.status === 'cancelled' 
+                       ? 'bg-gray-100 border border-gray-200' 
+                       : 'bg-base-50'
+                   }`}>
+                     <div className="flex-1">
+                       <div className="flex items-center space-x-2 mb-1">
+                         <h4 className="font-medium text-gray-900">{expense.description}</h4>
+                         {expense.status === 'cancelled' && (
+                           <span className="px-2 py-1 bg-gray-200 text-gray-600 text-xs rounded-full">
+                             Cancelado
+                           </span>
+                         )}
+                       </div>
+                       <p className="text-sm text-gray-500">
+                         Pagado por: {expense.paidBy?.slice(0, 6)}...{expense.paidBy?.slice(-4)}
+                       </p>
+                       <p className="text-sm text-gray-500">
+                         {formatDate(expense.createdAt)}
+                       </p>
+                       {expense.status === 'cancelled' && expense.cancelledAt && (
+                         <p className="text-sm text-gray-400">
+                           Cancelado: {formatDate(expense.cancelledAt)}
+                         </p>
+                       )}
+                     </div>
+                     <div className="flex items-center space-x-4">
+                       <div className="text-right">
+                         <p className={`text-lg font-semibold ${
+                           expense.status === 'cancelled' ? 'text-gray-500 line-through' : 'text-gray-900'
+                         }`}>
+                           {formatCurrency(expense.amount)}
+                         </p>
+                         <p className="text-sm text-gray-500">
+                           {formatCurrency(expense.amount / group.participants.length)} por persona
+                         </p>
+                       </div>
+                       <div className="flex items-center space-x-2">
+                         {expense.status !== 'cancelled' && (
+                           <button
+                             onClick={() => handleCancelExpense(expense.id)}
+                             className="p-2 text-orange-500 hover:bg-orange-50 rounded-lg transition-colors"
+                             title="Cancelar gasto"
+                           >
+                             <XCircle size={16} />
+                           </button>
+                         )}
+                         <button
+                           onClick={() => handleDeleteExpense(expense.id)}
+                           className="p-2 text-red-500 hover:bg-red-50 rounded-lg transition-colors"
+                           title="Eliminar gasto"
+                         >
+                           <Trash2 size={16} />
+                         </button>
+                       </div>
+                     </div>
+                   </div>
+                 ))}
+               </div>
+             )}
       </div>
 
       {/* Payment History */}
@@ -426,19 +516,34 @@ const GroupDetail: React.FC = () => {
         </div>
       )}
 
-      {/* Add Participant Name Modal */}
-      {showAddNameModal && (
-        <AddParticipantName
-          groupId={group.id}
-          address={selectedParticipant}
-          currentName={getParticipantName(group.id, selectedParticipant)}
-          onClose={() => {
-            setShowAddNameModal(false)
-            setSelectedParticipant('')
-            loadGroup() // Recargar datos para mostrar el nombre actualizado
-          }}
-        />
-      )}
+           {/* Add Participant Name Modal */}
+           {showAddNameModal && (
+             <AddParticipantName
+               groupId={group.id}
+               address={selectedParticipant}
+               currentName={getParticipantName(group.id, selectedParticipant)}
+               onClose={() => {
+                 setShowAddNameModal(false)
+                 setSelectedParticipant('')
+                 loadGroup() // Recargar datos para mostrar el nombre actualizado
+               }}
+             />
+           )}
+
+           {/* Cancel Debt Modal */}
+           {showCancelDebtModal && selectedDebt && (
+             <CancelDebt
+               groupId={group.id}
+               from={selectedDebt.from}
+               to={selectedDebt.to}
+               amount={selectedDebt.amount}
+               onClose={() => {
+                 setShowCancelDebtModal(false)
+                 setSelectedDebt(null)
+                 loadGroup() // Recargar datos después de cancelar
+               }}
+             />
+           )}
     </div>
   )
 }
