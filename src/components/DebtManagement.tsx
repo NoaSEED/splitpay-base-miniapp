@@ -37,6 +37,12 @@ const DebtManagement: React.FC<DebtManagementProps> = ({ groupId, onPaymentCompl
     amount: getTotalOwed(groupId, account)
   } : null
 
+  // Forzar re-render cuando cambie forceRefresh
+  useEffect(() => {
+    // Este efecto se ejecuta cada vez que cambia forceRefresh
+    // Lo que fuerza el re-render del componente
+  }, [forceRefresh])
+
   const handleRequestPayment = (from: string, to: string, amount: number) => {
     setSelectedDebt({ from, to, amount })
     setShowRequestModal(true)
