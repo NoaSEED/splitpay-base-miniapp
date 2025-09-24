@@ -248,7 +248,6 @@ const GroupDetail: React.FC = () => {
                <PendingPayments 
                  groupId={group.id} 
                  onPaymentCompleted={handlePaymentCompleted}
-                 key={refreshKey}
                />
              </div>
            )}
