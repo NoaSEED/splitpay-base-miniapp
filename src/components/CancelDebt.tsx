@@ -1,7 +1,7 @@
 import React, { useState } from 'react'
 import { useWeb3 } from '../contexts/Web3Context'
 import { useGroups } from '../contexts/GroupContext'
-import { XCircle, X, AlertTriangle, CheckCircle } from 'lucide-react'
+import { XCircle, X, AlertTriangle } from 'lucide-react'
 import toast from 'react-hot-toast'
 
 interface CancelDebtProps {

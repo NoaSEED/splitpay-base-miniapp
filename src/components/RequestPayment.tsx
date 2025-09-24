@@ -1,7 +1,7 @@
 import React, { useState } from 'react'
 import { useWeb3 } from '../contexts/Web3Context'
 import { useGroups } from '../contexts/GroupContext'
-import { Bell, X, User, DollarSign, MessageSquare } from 'lucide-react'
+import { Bell, X, MessageSquare } from 'lucide-react'
 import toast from 'react-hot-toast'
 
 interface RequestPaymentProps {
@@ -19,7 +19,7 @@ const RequestPayment: React.FC<RequestPaymentProps> = ({
   amount,
   onClose
 }) => {
-  const { account, formatAddress } = useWeb3()
+  const { formatAddress } = useWeb3()
   const { getParticipantName } = useGroups()
   const [message, setMessage] = useState('')
   const [isLoading, setIsLoading] = useState(false)

@@ -1,7 +1,7 @@
 import React, { useState } from 'react'
 import { useWeb3 } from '../contexts/Web3Context'
 import { useGroups } from '../contexts/GroupContext'
-import { AlertCircle, Bell, CheckCircle, User, DollarSign, XCircle } from 'lucide-react'
+import { AlertCircle, Bell, CheckCircle, XCircle } from 'lucide-react'
 import RequestPayment from './RequestPayment'
 import CancelDebt from './CancelDebt'
 
@@ -10,9 +10,9 @@ interface DebtManagementProps {
   onPaymentCompleted?: () => void
 }
 
-const DebtManagement: React.FC<DebtManagementProps> = ({ groupId, onPaymentCompleted }) => {
-  const { account, formatAddress } = useWeb3()
-  const { getParticipantDebts, getParticipantName } = useGroups()
+const DebtManagement: React.FC<DebtManagementProps> = ({ groupId }) => {
+  const { account } = useWeb3()
+  const { getParticipantDebts } = useGroups()
   const [showRequestModal, setShowRequestModal] = useState(false)
   const [showCancelModal, setShowCancelModal] = useState(false)
   const [selectedDebt, setSelectedDebt] = useState<{
