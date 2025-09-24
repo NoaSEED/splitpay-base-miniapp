@@ -433,6 +433,7 @@ export const GroupProvider: React.FC<{ children: ReactNode }> = ({ children }) =
       debt: Math.max(0, debt)
     })
 
+    // Si la deuda es negativa, significa que le deben dinero (no tiene deuda)
     return Math.max(0, debt)
   }, [groups])
 

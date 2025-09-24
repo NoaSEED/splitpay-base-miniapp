@@ -1,4 +1,4 @@
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
 import { useWeb3 } from '../contexts/Web3Context'
 import { useGroups } from '../contexts/GroupContext'
 import { AlertCircle, CheckCircle } from 'lucide-react'
@@ -20,6 +20,20 @@ const DebtManagement: React.FC<DebtManagementProps> = ({ groupId, onPaymentCompl
     groupName: 'Grupo',
     amount: getTotalOwed(groupId, account)
   } : null
+
+  // Escuchar cambios en localStorage para actualizar automáticamente
+  useEffect(() => {
+    const handleStorageChange = () => {
+      // Forzar re-render cuando cambie localStorage
+      window.location.reload()
+    }
+
+    window.addEventListener('storage', handleStorageChange)
+    
+    return () => {
+      window.removeEventListener('storage', handleStorageChange)
+    }
+  }, [])
 
   const handlePayDebt = async () => {
     if (!account || !groupDebt) return
@@ -65,6 +79,11 @@ const DebtManagement: React.FC<DebtManagementProps> = ({ groupId, onPaymentCompl
       localStorage.setItem('groups', JSON.stringify(updatedGroups))
       
       toast.success('Deuda pagada exitosamente')
+      
+      // Notificar al componente padre para que se actualice
+      if (onPaymentCompleted) {
+        onPaymentCompleted()
+      }
       
       // Recargar la página inmediatamente
       setTimeout(() => {
