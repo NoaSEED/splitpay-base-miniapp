@@ -68,6 +68,7 @@ interface GroupContextType {
   getGroupsByParticipant: (address: string) => GroupData[]
   getTotalOwed: (groupId: string, participant: string) => number
   getParticipantDebts: (address: string) => { groupId: string; groupName: string; amount: number }[]
+  refreshDebts: () => void
 }
 
 // ===========================================
@@ -319,6 +320,12 @@ export const GroupProvider: React.FC<{ children: ReactNode }> = ({ children }) =
       })
 
       saveGroups(updatedGroups)
+      
+      // Forzar refresh de deudas
+      setTimeout(() => {
+        refreshDebts()
+      }, 100)
+      
       toast.success('Deuda cancelada')
       console.log('❌ Deuda cancelada:', { from, to, amount, reason })
       
@@ -412,26 +419,26 @@ export const GroupProvider: React.FC<{ children: ReactNode }> = ({ children }) =
     const participantCount = group.participants.length
     const sharePerPerson = totalExpenses / participantCount
 
-    // Calcular cuánto ha pagado cada participante
+    // Calcular cuánto ha pagado cada participante en gastos
     const paidByParticipant = activeExpenses
       .filter(expense => expense.paidBy?.toLowerCase() === participant.toLowerCase())
       .reduce((sum, expense) => sum + (expense.amount || 0), 0)
 
-    // Calcular cuánto ha recibido en pagos completados
+    // Calcular cuánto ha recibido en pagos completados (dinero que le deben)
     const receivedPayments = group.payments
       .filter(payment => payment.to?.toLowerCase() === participant.toLowerCase() && payment.status === 'completed')
       .reduce((sum, payment) => sum + payment.amount, 0)
 
-    // Calcular cuánto ha pagado en pagos completados
+    // Calcular cuánto ha pagado en pagos completados (dinero que ha pagado)
     const madePayments = group.payments
       .filter(payment => payment.from?.toLowerCase() === participant.toLowerCase() && payment.status === 'completed')
       .reduce((sum, payment) => sum + payment.amount, 0)
 
-    // La deuda real es: lo que debe pagar - lo que ha pagado + lo que ha recibido
+    // La deuda es: lo que debe pagar - lo que ha pagado en gastos - lo que ha recibido en pagos + lo que ha pagado en pagos
     const baseDebt = sharePerPerson - paidByParticipant
-    const actualDebt = baseDebt - receivedPayments + madePayments
+    const finalDebt = baseDebt - receivedPayments + madePayments
 
-    return Math.max(0, actualDebt) // No puede ser negativo
+    return Math.max(0, finalDebt) // No puede ser negativo
   }, [groups])
 
   // ===========================================
@@ -480,6 +487,12 @@ export const GroupProvider: React.FC<{ children: ReactNode }> = ({ children }) =
       amount: getTotalOwed(group.id, address)
     })).filter(debt => debt.amount > 0)
   }, [getGroupsByParticipant, getTotalOwed])
+
+  // Función para forzar refresh de deudas
+  const refreshDebts = useCallback(() => {
+    // Forzar re-render de componentes que usan deudas
+    setGroups(prev => [...prev])
+  }, [])
 
   // ===========================================
   // Payment Management
@@ -591,6 +604,12 @@ export const GroupProvider: React.FC<{ children: ReactNode }> = ({ children }) =
       })
 
       saveGroups(updatedGroups)
+      
+      // Forzar refresh de deudas
+      setTimeout(() => {
+        refreshDebts()
+      }, 100)
+      
       toast.success('Pago marcado como completado')
       console.log('✅ Pago completado:', paymentId)
       
@@ -657,6 +676,7 @@ export const GroupProvider: React.FC<{ children: ReactNode }> = ({ children }) =
     getGroupsByParticipant,
     getTotalOwed,
     getParticipantDebts,
+    refreshDebts,
   }
 
   return <GroupContext.Provider value={value}>{children}</GroupContext.Provider>
