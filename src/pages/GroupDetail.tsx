@@ -49,6 +49,10 @@ const GroupDetail: React.FC = () => {
     // Forzar refresh de la vista
     setRefreshKey(prev => prev + 1)
     loadGroup() // Recargar datos del grupo
+    // Forzar re-render de DebtManagement
+    setTimeout(() => {
+      setRefreshKey(prev => prev + 1)
+    }, 100)
   }
 
   const handleAddExpense = async (e: React.FormEvent) => {
