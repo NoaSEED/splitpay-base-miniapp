@@ -8,9 +8,10 @@ import CancelDebt from './CancelDebt'
 
 interface PendingPaymentsProps {
   groupId: string
+  onPaymentCompleted?: () => void
 }
 
-const PendingPayments: React.FC<PendingPaymentsProps> = ({ groupId }) => {
+const PendingPayments: React.FC<PendingPaymentsProps> = ({ groupId, onPaymentCompleted }) => {
   const { account, formatAddress } = useWeb3()
   const { getPendingPayments, completePayment, getParticipantName } = useGroups()
   const [showCompleteModal, setShowCompleteModal] = useState(false)
@@ -41,6 +42,10 @@ const PendingPayments: React.FC<PendingPaymentsProps> = ({ groupId }) => {
       if (success) {
         setShowCompleteModal(false)
         setSelectedPayment(null)
+        // Llamar callback para refrescar la vista padre
+        if (onPaymentCompleted) {
+          onPaymentCompleted()
+        }
       }
     }
   }

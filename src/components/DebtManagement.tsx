@@ -7,9 +7,10 @@ import CancelDebt from './CancelDebt'
 
 interface DebtManagementProps {
   groupId: string
+  onPaymentCompleted?: () => void
 }
 
-const DebtManagement: React.FC<DebtManagementProps> = ({ groupId }) => {
+const DebtManagement: React.FC<DebtManagementProps> = ({ groupId, onPaymentCompleted }) => {
   const { account, formatAddress } = useWeb3()
   const { getParticipantDebts, getParticipantName } = useGroups()
   const [showRequestModal, setShowRequestModal] = useState(false)
