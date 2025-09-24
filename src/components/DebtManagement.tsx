@@ -1,4 +1,4 @@
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
 import { useWeb3 } from '../contexts/Web3Context'
 import { useGroups } from '../contexts/GroupContext'
 import { AlertCircle, Bell, CheckCircle, XCircle } from 'lucide-react'
@@ -27,6 +27,20 @@ const DebtManagement: React.FC<DebtManagementProps> = ({ groupId, onPaymentCompl
     groupName: 'Grupo',
     amount: getTotalOwed(groupId, account)
   } : null
+
+  // Debug: mostrar información de la deuda
+  console.log('DebtManagement Debug:', {
+    account,
+    groupId,
+    groupDebt,
+    amount: groupDebt?.amount
+  })
+
+  // Forzar re-render cuando cambie la cuenta
+  useEffect(() => {
+    // Este efecto se ejecuta cuando cambia la cuenta
+    // Lo que fuerza el re-render del componente
+  }, [account])
 
   const handleRequestPayment = (from: string, to: string, amount: number) => {
     setSelectedDebt({ from, to, amount })
