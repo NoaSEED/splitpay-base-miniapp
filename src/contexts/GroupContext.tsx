@@ -524,7 +524,7 @@ export const GroupProvider: React.FC<{ children: ReactNode }> = ({ children }) =
             return payment
           })
 
-          // Crear notificación automática
+          // Crear notificación automática y cancelar deuda relacionada
           const completedPayment = group.payments.find(p => p.id === paymentId)
           if (completedPayment) {
             // Guardar notificación en localStorage
@@ -545,6 +545,30 @@ export const GroupProvider: React.FC<{ children: ReactNode }> = ({ children }) =
             const toNotifications = JSON.parse(localStorage.getItem(`notifications_${completedPayment.to}`) || '[]')
             toNotifications.push(notification)
             localStorage.setItem(`notifications_${completedPayment.to}`, JSON.stringify(toNotifications))
+
+            // CANCELAR AUTOMÁTICAMENTE LA DEUDA RELACIONADA
+            // Buscar y cancelar pagos pendientes relacionados con este pago
+            const updatedPaymentsWithCancellation = updatedPayments.map(payment => {
+              // Si es un pago pendiente que involucra a los mismos participantes
+              if (payment.status === 'pending' && 
+                  payment.from === completedPayment.from && 
+                  payment.to === completedPayment.to &&
+                  payment.amount === completedPayment.amount) {
+                return {
+                  ...payment,
+                  status: 'cancelled' as const,
+                  completedAt: new Date().toISOString(),
+                  completedBy: completedBy,
+                  notes: `Deuda cancelada automáticamente por pago completado`
+                }
+              }
+              return payment
+            })
+
+            return {
+              ...group,
+              payments: updatedPaymentsWithCancellation
+            }
           }
 
           return {
