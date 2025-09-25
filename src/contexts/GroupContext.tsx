@@ -1,71 +1,41 @@
-import React, { createContext, useContext, useState, useEffect, ReactNode, useCallback } from 'react'
+import React, { createContext, useContext, useState, useEffect, ReactNode, useCallback, useMemo } from 'react'
 import toast from 'react-hot-toast'
+import { STORAGE_KEYS, SUCCESS_MESSAGES, ERROR_MESSAGES } from '../constants'
+import { createNotification, saveNotification, calculateBalances, saveToLocalStorage, loadFromLocalStorage } from '../utils'
+import type { Group, Expense, Payment, CreateGroupForm, AddExpenseForm, AddParticipantForm } from '../types'
 
 // ===========================================
 // Types & Interfaces
 // ===========================================
 
-interface Payment {
-  id: string
-  from: string // Quien debe pagar
-  to: string // Quien recibe el pago
-  amount: number
-  status: 'pending' | 'completed' | 'disputed' | 'cancelled'
-  transactionHash?: string // Hash de la transacción
-  proofImage?: string // Imagen del comprobante
-  createdAt: string
-  completedAt?: string
-  completedBy?: string // Quien marcó como completado
-  notes?: string
-}
-
-interface GroupData {
-  id: string
-  name: string
-  description: string
-  currency: 'USDC' // Solo USDC en Base
-  category: string
-  startDate: string
-  endDate?: string
-  divisionMethod: string
-  participants: string[]
-  participantNames: { [address: string]: string } // Mapeo de dirección a nombre
-  createdAt: string
-  status: string
-  totalAmount: number
-  expenses: any[]
-  payments: Payment[] // Nuevo: historial de pagos
-  contractAddress?: string
-}
-
 interface GroupContextType {
   // Groups state
-  groups: GroupData[]
-  currentGroup: GroupData | null
+  groups: Group[]
+  currentGroup: Group | null
   isLoading: boolean
   
   // Actions
-  createGroup: (groupData: Omit<GroupData, 'id' | 'createdAt' | 'expenses' | 'totalAmount'>) => Promise<boolean>
-  addExpense: (groupId: string, expenseData: any) => Promise<boolean>
+  createGroup: (groupData: CreateGroupForm) => Promise<boolean>
+  addExpense: (groupId: string, expenseData: AddExpenseForm) => Promise<boolean>
   deleteExpense: (groupId: string, expenseId: string) => Promise<boolean>
   cancelExpense: (groupId: string, expenseId: string) => Promise<boolean>
-  cancelDebt: (groupId: string, from: string, to: string, amount: number, reason: string) => Promise<boolean>
-  getGroup: (groupId: string) => Promise<GroupData | null>
-  updateGroup: (groupId: string, updates: Partial<GroupData>) => Promise<boolean>
+  completePayment: (groupId: string, paymentId: string, transactionHash: string, completedBy: string) => Promise<boolean>
+  getGroup: (groupId: string) => Promise<Group | null>
+  updateGroup: (groupId: string, updates: Partial<Group>) => Promise<boolean>
   deleteGroup: (groupId: string) => Promise<boolean>
   
   // Participant management
+  addParticipant: (groupId: string, participantData: AddParticipantForm) => Promise<boolean>
   addParticipantName: (groupId: string, address: string, name: string) => Promise<boolean>
   getParticipantName: (groupId: string, address: string) => string
   
   // Payment management
   createPayment: (groupId: string, from: string, to: string, amount: number) => Promise<boolean>
-  completePayment: (groupId: string, paymentId: string, transactionHash: string, completedBy: string) => Promise<boolean>
   getPendingPayments: (groupId: string, participant: string) => Payment[]
   getPaymentHistory: (groupId: string) => Payment[]
   
   // Utility
-  getGroupsByParticipant: (address: string) => GroupData[]
+  getGroupsByParticipant: (address: string) => Group[]
   getTotalOwed: (groupId: string, participant: string) => number
   getParticipantDebts: (address: string) => { groupId: string; groupName: string; amount: number }[]
 }
@@ -82,8 +52,8 @@ const GroupContext = createContext<GroupContextType | undefined>(undefined)
 
 export const GroupProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
   // State
-  const [groups, setGroups] = useState<GroupData[]>([])
-  const [currentGroup, setCurrentGroup] = useState<GroupData | null>(null)
+  const [groups, setGroups] = useState<Group[]>([])
+  const [currentGroup, setCurrentGroup] = useState<Group | null>(null)
   const [isLoading, setIsLoading] = useState(false)
 
   // ===========================================
@@ -93,32 +63,44 @@ export const GroupProvider: React.FC<{ children: ReactNode }> = ({ children }) =
   useEffect(() => {
     const loadGroups = () => {
       try {
-        const savedGroups = localStorage.getItem('splitpay-groups')
-        if (savedGroups) {
-          const parsedGroups = JSON.parse(savedGroups)
-          setGroups(parsedGroups)
-          console.log('📁 Grupos cargados:', parsedGroups.length)
-        }
-      } catch (error) {
+        const savedGroups = loadFromLocalStorage<Group[]>(STORAGE_KEYS.GROUPS, [])
+        setGroups(savedGroups)
+        console.log('📁 Grupos cargados:', savedGroups.length)
+      } catch (error: unknown) {
         console.error('Error loading groups:', error)
-        toast.error('Error al cargar los grupos')
+        toast.error(ERROR_MESSAGES.GENERIC_CONNECTION_ERROR)
       }
     }
 
     loadGroups()
+
+    // Escuchar cambios en localStorage
+    const handleStorageChange = () => {
+      loadGroups()
+    }
+
+    window.addEventListener('storage', handleStorageChange)
+    
+    // También verificar cambios cada segundo (para la misma pestaña)
+    const interval = setInterval(loadGroups, 1000)
+
+    return () => {
+      window.removeEventListener('storage', handleStorageChange)
+      clearInterval(interval)
+    }
   }, [])
 
   // ===========================================
   // Save Groups to localStorage
   // ===========================================
 
-  const saveGroups = useCallback((newGroups: GroupData[]) => {
+  const saveGroups = useCallback((newGroups: Group[]) => {
     try {
-      localStorage.setItem('splitpay-groups', JSON.stringify(newGroups))
+      saveToLocalStorage(STORAGE_KEYS.GROUPS, newGroups)
       setGroups(newGroups)
-    } catch (error) {
+    } catch (error: unknown) {
       console.error('Error saving groups:', error)
-      toast.error('Error al guardar los grupos')
+      toast.error(ERROR_MESSAGES.GENERIC_CONNECTION_ERROR)
     }
   }, [])
 
@@ -126,28 +108,31 @@ export const GroupProvider: React.FC<{ children: ReactNode }> = ({ children }) =
   // Group Management Functions
   // ===========================================
 
-  const createGroup = useCallback(async (groupData: Omit<GroupData, 'id' | 'createdAt' | 'expenses' | 'totalAmount'>): Promise<boolean> => {
+  const createGroup = useCallback(async (groupData: CreateGroupForm): Promise<boolean> => {
     setIsLoading(true)
     try {
-      const newGroup: GroupData = {
+      const newGroup: Group = {
         ...groupData,
         id: `group_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
         createdAt: new Date().toISOString(),
+        startDate: new Date().toISOString(),
+        currency: 'USDC',
+        divisionMethod: 'equal',
+        status: 'active',
         expenses: [],
         payments: [],
         totalAmount: 0,
-        status: 'active',
-        participantNames: groupData.participantNames || {}
+        participantNames: {},
       }
 
       const updatedGroups = [...groups, newGroup]
       saveGroups(updatedGroups)
       
-      toast.success(`Grupo "${newGroup.name}" creado exitosamente`)
+      toast.success(`${SUCCESS_MESSAGES.GROUP_CREATED} "${newGroup.name}"`)
       console.log('✅ Grupo creado:', newGroup.name)
       
       return true
-    } catch (error) {
+    } catch (error: unknown) {
       console.error('Error creating group:', error)
       toast.error('Error al crear el grupo')
       return false
@@ -156,41 +141,39 @@ export const GroupProvider: React.FC<{ children: ReactNode }> = ({ children }) =
     }
   }, [groups, saveGroups])
 
-  const addExpense = useCallback(async (groupId: string, expenseData: any): Promise<boolean> => {
+  const addExpense = useCallback(async (groupId: string, expenseData: AddExpenseForm): Promise<boolean> => {
     setIsLoading(true)
     try {
       const updatedGroups = groups.map(group => {
         if (group.id === groupId) {
-          const newExpense = {
+          const newExpense: Expense = {
             ...expenseData,
             id: `expense_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
             createdAt: new Date().toISOString(),
+            status: 'active',
             groupId: groupId
           }
           
-          // Crear pagos automáticamente para cada participante que debe
-          const newPayments: Payment[] = []
-          const amountPerPerson = expenseData.amount / group.participants.length
-          
+          // Crear notificaciones para todos los participantes excepto quien pagó
           group.participants.forEach(participant => {
-            if (participant !== expenseData.paidBy) {
-              // Solo crear pago si el participante no es quien pagó
-              newPayments.push({
-                id: `payment_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
-                from: participant,
-                to: expenseData.paidBy,
-                amount: amountPerPerson,
-                status: 'pending',
-                createdAt: new Date().toISOString()
-              })
+            if (participant.toLowerCase() !== newExpense.paidBy.toLowerCase()) {
+              const notification = createNotification(
+                'expense_added',
+                group.id,
+                group.name,
+                `Se ha añadido un gasto de ${newExpense.amount.toFixed(2)} USDC en "${group.name}"`,
+                participant,
+                newExpense.amount,
+                newExpense.paidBy
+              )
+              saveNotification(participant, notification)
             }
           })
-          
+
           return {
             ...group,
             expenses: [...group.expenses, newExpense],
-            payments: [...group.payments, ...newPayments],
-            totalAmount: group.totalAmount + (expenseData.amount || 0)
+            totalAmount: group.totalAmount + (newExpense.amount || 0)
           }
         }
         return group
@@ -198,13 +181,13 @@ export const GroupProvider: React.FC<{ children: ReactNode }> = ({ children }) =
 
       saveGroups(updatedGroups)
       
-      toast.success(`Gasto "${expenseData.description}" agregado`)
+      toast.success(`${SUCCESS_MESSAGES.EXPENSE_ADDED} "${expenseData.description}"`)
       console.log('💰 Gasto agregado:', expenseData.description)
       
       return true
-    } catch (error) {
+    } catch (error: unknown) {
       console.error('Error adding expense:', error)
-      toast.error('Error al agregar el gasto')
+      toast.error(ERROR_MESSAGES.GENERIC_CONNECTION_ERROR)
       return false
     } finally {
       setIsLoading(false)
@@ -230,13 +213,13 @@ export const GroupProvider: React.FC<{ children: ReactNode }> = ({ children }) =
 
       saveGroups(updatedGroups)
       
-      toast.success('Gasto eliminado')
+      toast.success(SUCCESS_MESSAGES.EXPENSE_DELETED)
       console.log('🗑️ Gasto eliminado:', expenseId)
       
       return true
-    } catch (error) {
+    } catch (error: unknown) {
       console.error('Error deleting expense:', error)
-      toast.error('Error al eliminar el gasto')
+      toast.error(ERROR_MESSAGES.GENERIC_CONNECTION_ERROR)
       return false
     } finally {
       setIsLoading(false)
@@ -251,27 +234,16 @@ export const GroupProvider: React.FC<{ children: ReactNode }> = ({ children }) =
           const expenseToCancel = group.expenses.find(expense => expense.id === expenseId)
           if (!expenseToCancel) return group
           
-          // Marcar el gasto como cancelado en lugar de eliminarlo
+          // Marcar el gasto como cancelado
           const updatedExpenses = group.expenses.map(expense => 
             expense.id === expenseId 
-              ? { ...expense, status: 'cancelled', cancelledAt: new Date().toISOString() }
+              ? { ...expense, status: 'cancelled' as const }
               : expense
           )
           
-          // Cancelar todos los pagos pendientes relacionados con este gasto
-          const updatedPayments = group.payments.map(payment => {
-            // Cancelar pagos pendientes que involucran al que pagó el gasto
-            if (payment.status === 'pending' && 
-                (payment.from === expenseToCancel.paidBy || payment.to === expenseToCancel.paidBy)) {
-              return { ...payment, status: 'cancelled' as const }
-            }
-            return payment
-          })
-          
           return {
             ...group,
-            expenses: updatedExpenses,
-            payments: updatedPayments
+            expenses: updatedExpenses
           }
         }
         return group
@@ -279,60 +251,20 @@ export const GroupProvider: React.FC<{ children: ReactNode }> = ({ children }) =
 
       saveGroups(updatedGroups)
       
-      toast.success('Gasto cancelado')
+      toast.success(SUCCESS_MESSAGES.EXPENSE_CANCELLED)
       console.log('❌ Gasto cancelado:', expenseId)
       
       return true
-    } catch (error) {
+    } catch (error: unknown) {
       console.error('Error cancelling expense:', error)
-      toast.error('Error al cancelar el gasto')
+      toast.error(ERROR_MESSAGES.GENERIC_CONNECTION_ERROR)
       return false
     } finally {
       setIsLoading(false)
     }
   }, [groups, saveGroups])
 
-  const cancelDebt = useCallback(async (groupId: string, from: string, to: string, amount: number, reason: string): Promise<boolean> => {
-    setIsLoading(true)
-    try {
-      const updatedGroups = groups.map(group => {
-        if (group.id === groupId) {
-          // Crear un pago cancelado para registrar la cancelación de deuda
-          const cancelledPayment: Payment = {
-            id: `cancelled_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
-            from,
-            to,
-            amount,
-            status: 'cancelled',
-            createdAt: new Date().toISOString(),
-            completedAt: new Date().toISOString(),
-            completedBy: from,
-            notes: `Deuda cancelada: ${reason}`
-          }
-
-          return {
-            ...group,
-            payments: [...group.payments, cancelledPayment]
-          }
-        }
-        return group
-      })
-
-      saveGroups(updatedGroups)
-      toast.success('Deuda cancelada')
-      console.log('❌ Deuda cancelada:', { from, to, amount, reason })
-      
-      return true
-    } catch (error) {
-      console.error('Error cancelling debt:', error)
-      toast.error('Error al cancelar la deuda')
-      return false
-    } finally {
-      setIsLoading(false)
-    }
-  }, [groups, saveGroups])
-
-  const getGroup = useCallback(async (groupId: string): Promise<GroupData | null> => {
+  const getGroup = useCallback(async (groupId: string): Promise<Group | null> => {
     try {
       const group = groups.find(g => g.id === groupId)
       if (group) {
@@ -340,13 +272,13 @@ export const GroupProvider: React.FC<{ children: ReactNode }> = ({ children }) =
         return group
       }
       return null
-    } catch (error) {
+    } catch (error: unknown) {
       console.error('Error getting group:', error)
       return null
     }
   }, [groups])
 
-  const updateGroup = useCallback(async (groupId: string, updates: Partial<GroupData>): Promise<boolean> => {
+  const updateGroup = useCallback(async (groupId: string, updates: Partial<Group>): Promise<boolean> => {
     setIsLoading(true)
     try {
       const updatedGroups = groups.map(group => {
@@ -358,13 +290,13 @@ export const GroupProvider: React.FC<{ children: ReactNode }> = ({ children }) =
 
       saveGroups(updatedGroups)
       
-      toast.success('Grupo actualizado')
+      toast.success(SUCCESS_MESSAGES.GROUP_UPDATED)
       console.log('🔄 Grupo actualizado:', groupId)
       
       return true
-    } catch (error) {
+    } catch (error: unknown) {
       console.error('Error updating group:', error)
-      toast.error('Error al actualizar el grupo')
+      toast.error(ERROR_MESSAGES.GENERIC_CONNECTION_ERROR)
       return false
     } finally {
       setIsLoading(false)
@@ -377,13 +309,13 @@ export const GroupProvider: React.FC<{ children: ReactNode }> = ({ children }) =
       const updatedGroups = groups.filter(group => group.id !== groupId)
       saveGroups(updatedGroups)
       
-      toast.success('Grupo eliminado')
+      toast.success(SUCCESS_MESSAGES.GROUP_DELETED)
       console.log('🗑️ Grupo eliminado:', groupId)
       
       return true
-    } catch (error) {
+    } catch (error: unknown) {
       console.error('Error deleting group:', error)
-      toast.error('Error al eliminar el grupo')
+      toast.error(ERROR_MESSAGES.GENERIC_CONNECTION_ERROR)
       return false
     } finally {
       setIsLoading(false)
@@ -391,55 +323,43 @@ export const GroupProvider: React.FC<{ children: ReactNode }> = ({ children }) =
   }, [groups, saveGroups])
 
   // ===========================================
-  // Utility Functions
+  // Participant Management
   // ===========================================
 
-  const getGroupsByParticipant = useCallback((address: string): GroupData[] => {
-    return groups.filter(group => 
-      group.participants.some(participant => 
-        participant.toLowerCase() === address.toLowerCase()
-      )
-    )
-  }, [groups])
+  const addParticipant = useCallback(async (groupId: string, participantData: AddParticipantForm): Promise<boolean> => {
+    setIsLoading(true)
+    try {
+      const updatedGroups = groups.map(group => {
+        if (group.id === groupId) {
+          // Verificar si el participante ya existe
+          if (group.participants.includes(participantData.address)) {
+            toast.error(ERROR_MESSAGES.PARTICIPANT_ALREADY_ADDED)
+            return group
+          }
 
-  const getTotalOwed = useCallback((groupId: string, participant: string): number => {
-    const group = groups.find(g => g.id === groupId)
-    if (!group) return 0
+          return {
+            ...group,
+            participants: [...group.participants, participantData.address],
+            participantNames: {
+              ...group.participantNames,
+              [participantData.address.toLowerCase()]: participantData.name || participantData.address
+            }
+          }
+        }
+        return group
+      })
 
-    // Gastos activos (no cancelados)
-    const activeExpenses = group.expenses.filter(expense => expense.status !== 'cancelled')
-    const totalExpenses = activeExpenses.reduce((sum, expense) => sum + (expense.amount || 0), 0)
-    const participantCount = group.participants.length
-    const sharePerPerson = totalExpenses / participantCount
-
-    // Lo que ha pagado en gastos
-    const paidByParticipant = activeExpenses
-      .filter(expense => expense.paidBy?.toLowerCase() === participant.toLowerCase())
-      .reduce((sum, expense) => sum + (expense.amount || 0), 0)
-
-    // Lo que ha recibido en pagos completados
-    const receivedPayments = group.payments
-      .filter(payment => payment.to?.toLowerCase() === participant.toLowerCase() && payment.status === 'completed')
-      .reduce((sum, payment) => sum + payment.amount, 0)
-
-    // Deuda = lo que debe - lo que ha pagado - lo que ha recibido
-    const debt = sharePerPerson - paidByParticipant - receivedPayments
-
-    console.log('getTotalOwed Debug:', {
-      participant,
-      sharePerPerson,
-      paidByParticipant,
-      receivedPayments,
-      debt: Math.max(0, debt)
-    })
-
-    // Si la deuda es negativa, significa que le deben dinero (no tiene deuda)
-    return Math.max(0, debt)
-  }, [groups])
-
-  // ===========================================
-  // Participant Name Management
-  // ===========================================
+      saveGroups(updatedGroups)
+      toast.success('Participante agregado exitosamente')
+      return true
+    } catch (error: unknown) {
+      console.error('Error adding participant:', error)
+      toast.error(ERROR_MESSAGES.GENERIC_CONNECTION_ERROR)
+      return false
+    } finally {
+      setIsLoading(false)
+    }
+  }, [groups, saveGroups])
 
   const addParticipantName = useCallback(async (groupId: string, address: string, name: string): Promise<boolean> => {
     setIsLoading(true)
@@ -458,11 +378,11 @@ export const GroupProvider: React.FC<{ children: ReactNode }> = ({ children }) =
       })
 
       saveGroups(updatedGroups)
-      toast.success(`Nombre "${name}" agregado para ${address}`)
+      toast.success(`${SUCCESS_MESSAGES.PARTICIPANT_NAME_ADDED} "${name}" para ${address.slice(0, 6)}...${address.slice(-4)}`)
       return true
-    } catch (error) {
+    } catch (error: unknown) {
       console.error('Error adding participant name:', error)
-      toast.error('Error al agregar el nombre')
+      toast.error(ERROR_MESSAGES.GENERIC_CONNECTION_ERROR)
       return false
     } finally {
       setIsLoading(false)
@@ -471,19 +391,9 @@ export const GroupProvider: React.FC<{ children: ReactNode }> = ({ children }) =
 
   const getParticipantName = useCallback((groupId: string, address: string): string => {
     const group = groups.find(g => g.id === groupId)
-    if (!group || !group.participantNames) return ''
-    return group.participantNames[address.toLowerCase()] || ''
+    if (!group || !group.participantNames) return `${address.slice(0, 6)}...${address.slice(-4)}`
+    return group.participantNames[address.toLowerCase()] || `${address.slice(0, 6)}...${address.slice(-4)}`
   }, [groups])
-
-  const getParticipantDebts = useCallback((address: string): { groupId: string; groupName: string; amount: number }[] => {
-    const userGroups = getGroupsByParticipant(address)
-    return userGroups.map(group => ({
-      groupId: group.id,
-      groupName: group.name,
-      amount: getTotalOwed(group.id, address)
-    })).filter(debt => debt.amount > 0)
-  }, [getGroupsByParticipant, getTotalOwed])
-
 
   // ===========================================
   // Payment Management
@@ -492,17 +402,17 @@ export const GroupProvider: React.FC<{ children: ReactNode }> = ({ children }) =
   const createPayment = useCallback(async (groupId: string, from: string, to: string, amount: number): Promise<boolean> => {
     setIsLoading(true)
     try {
-      const newPayment: Payment = {
-        id: `payment_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
-        from,
-        to,
-        amount,
-        status: 'pending',
-        createdAt: new Date().toISOString()
-      }
-
       const updatedGroups = groups.map(group => {
         if (group.id === groupId) {
+          const newPayment: Payment = {
+            id: `payment_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+            from,
+            to,
+            amount,
+            status: 'pending',
+            createdAt: new Date().toISOString()
+          }
+
           return {
             ...group,
             payments: [...group.payments, newPayment]
@@ -512,13 +422,11 @@ export const GroupProvider: React.FC<{ children: ReactNode }> = ({ children }) =
       })
 
       saveGroups(updatedGroups)
-      toast.success(`Pago de $${amount.toFixed(2)} USDC creado`)
-      console.log('💰 Pago creado:', newPayment.id)
-      
+      toast.success(SUCCESS_MESSAGES.PAYMENT_CREATED)
       return true
-    } catch (error) {
+    } catch (error: unknown) {
       console.error('Error creating payment:', error)
-      toast.error('Error al crear el pago')
+      toast.error(ERROR_MESSAGES.GENERIC_CONNECTION_ERROR)
       return false
     } finally {
       setIsLoading(false)
@@ -530,11 +438,12 @@ export const GroupProvider: React.FC<{ children: ReactNode }> = ({ children }) =
     try {
       const updatedGroups = groups.map(group => {
         if (group.id === groupId) {
-          // Primero, encontrar el pago que se está completando
           const completedPayment = group.payments.find(p => p.id === paymentId)
-          if (!completedPayment) return group
+          if (!completedPayment) {
+            toast.error(ERROR_MESSAGES.PAYMENT_NOT_FOUND)
+            return group
+          }
 
-          // Actualizar el pago completado
           const updatedPayments = group.payments.map(payment => {
             if (payment.id === paymentId) {
               return {
@@ -548,65 +457,39 @@ export const GroupProvider: React.FC<{ children: ReactNode }> = ({ children }) =
             return payment
           })
 
-          // CANCELAR AUTOMÁTICAMENTE TODAS LAS DEUDAS RELACIONADAS
-          const finalPayments = updatedPayments.map(payment => {
-            // Si es un pago pendiente que involucra a los mismos participantes
-            if (payment.status === 'pending' && 
-                payment.from === completedPayment.from && 
-                payment.to === completedPayment.to &&
-                payment.amount === completedPayment.amount &&
-                payment.id !== paymentId) {
-              return {
-                ...payment,
-                status: 'cancelled' as const,
-                completedAt: new Date().toISOString(),
-                completedBy: completedBy,
-                notes: `Deuda cancelada automáticamente por pago completado`
-              }
-            }
-            return payment
-          })
-
-          // Crear notificación automática
-          const notification = {
-            id: `payment_completed_${paymentId}`,
-            type: 'payment_completed',
-            groupId: group.id,
-            groupName: group.name,
-            message: `Pago de $${completedPayment.amount.toFixed(2)} USDC completado`,
-            amount: completedPayment.amount,
-            from: completedPayment.from,
-            to: completedPayment.to,
-            timestamp: new Date().toISOString(),
-            read: false
-          }
-
-          // Guardar notificación para el que recibió el pago
-          const toNotifications = JSON.parse(localStorage.getItem(`notifications_${completedPayment.to}`) || '[]')
-          toNotifications.push(notification)
-          localStorage.setItem(`notifications_${completedPayment.to}`, JSON.stringify(toNotifications))
+          // Crear notificación automática para el receptor del pago
+          const notification = createNotification(
+            'payment_completed',
+            group.id,
+            group.name,
+            `¡Has recibido un pago de ${completedPayment.amount.toFixed(2)} USDC de ${getParticipantName(group.id, completedPayment.from)} en "${group.name}"!`,
+            completedPayment.to,
+            completedPayment.amount,
+            completedPayment.from
+          )
+          saveNotification(completedPayment.to, notification)
 
           return {
             ...group,
-            payments: finalPayments
+            payments: updatedPayments
           }
         }
         return group
       })
 
       saveGroups(updatedGroups)
-      toast.success('Pago marcado como completado')
+      toast.success(SUCCESS_MESSAGES.PAYMENT_COMPLETED)
       console.log('✅ Pago completado:', paymentId)
       
       return true
-    } catch (error) {
+    } catch (error: unknown) {
       console.error('Error completing payment:', error)
-      toast.error('Error al completar el pago')
+      toast.error(ERROR_MESSAGES.GENERIC_CONNECTION_ERROR)
       return false
     } finally {
       setIsLoading(false)
     }
-  }, [groups, saveGroups])
+  }, [groups, saveGroups, getParticipantName])
 
   const getPendingPayments = useCallback((groupId: string, participant: string): Payment[] => {
     const group = groups.find(g => g.id === groupId)
@@ -628,10 +511,48 @@ export const GroupProvider: React.FC<{ children: ReactNode }> = ({ children }) =
   }, [groups])
 
   // ===========================================
+  // Utility Functions
+  // ===========================================
+
+  const getGroupsByParticipant = useCallback((address: string): Group[] => {
+    return groups.filter(group => 
+      group.participants.some(participant => 
+        participant.toLowerCase() === address.toLowerCase()
+      )
+    )
+  }, [groups])
+
+  const getTotalOwed = useCallback((groupId: string, participant: string): number => {
+    const group = groups.find(g => g.id === groupId)
+    if (!group) return 0
+
+    const { userOwes } = calculateBalances(group, participant)
+    return userOwes
+  }, [groups])
+
+  const getParticipantDebts = useCallback((address: string) => {
+    const userGroups = getGroupsByParticipant(address)
+    const debts: { groupId: string; groupName: string; amount: number }[] = []
+
+    userGroups.forEach(group => {
+      const { userOwes } = calculateBalances(group, address)
+      if (userOwes > 0) {
+        debts.push({
+          groupId: group.id,
+          groupName: group.name,
+          amount: userOwes
+        })
+      }
+    })
+
+    return debts
+  }, [getGroupsByParticipant])
+
+  // ===========================================
   // Context Value
   // ===========================================
 
-  const value: GroupContextType = {
+  const value: GroupContextType = useMemo(() => ({
     // Groups state
     groups,
     currentGroup,
@@ -642,18 +563,18 @@ export const GroupProvider: React.FC<{ children: ReactNode }> = ({ children }) =
     addExpense,
     deleteExpense,
     cancelExpense,
-    cancelDebt,
+    completePayment,
     getGroup,
     updateGroup,
     deleteGroup,
     
     // Participant management
+    addParticipant,
     addParticipantName,
     getParticipantName,
     
     // Payment management
     createPayment,
-    completePayment,
     getPendingPayments,
     getPaymentHistory,
     
@@ -661,7 +582,28 @@ export const GroupProvider: React.FC<{ children: ReactNode }> = ({ children }) =
     getGroupsByParticipant,
     getTotalOwed,
     getParticipantDebts,
-  }
+  }), [
+    groups,
+    currentGroup,
+    isLoading,
+    createGroup,
+    addExpense,
+    deleteExpense,
+    cancelExpense,
+    completePayment,
+    getGroup,
+    updateGroup,
+    deleteGroup,
+    addParticipant,
+    addParticipantName,
+    getParticipantName,
+    createPayment,
+    getPendingPayments,
+    getPaymentHistory,
+    getGroupsByParticipant,
+    getTotalOwed,
+    getParticipantDebts,
+  ])
 
   return <GroupContext.Provider value={value}>{children}</GroupContext.Provider>
 }
@@ -682,4 +624,4 @@ export const useGroups = (): GroupContextType => {
 // Export types for external use
 // ===========================================
 
-export type { GroupData, GroupContextType, Payment }
+export type { GroupContextType }

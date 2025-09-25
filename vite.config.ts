@@ -5,10 +5,15 @@ export default defineConfig({
   plugins: [react()],
   server: {
     host: true,
-    port: 3000
+    port: 3001,
+    open: true,
+    cors: true
   },
   build: {
-    chunkSizeWarningLimit: 1000, // Aumentar límite a 1MB
+    target: 'esnext',
+    minify: 'terser',
+    sourcemap: false,
+    chunkSizeWarningLimit: 1000,
     rollupOptions: {
       output: {
         manualChunks: {
@@ -16,9 +21,18 @@ export default defineConfig({
           router: ['react-router-dom'],
           ethers: ['ethers'],
           ui: ['lucide-react', 'react-hot-toast']
-        }
+        },
+        chunkFileNames: 'assets/[name]-[hash].js',
+        entryFileNames: 'assets/[name]-[hash].js',
+        assetFileNames: 'assets/[name]-[hash].[ext]'
       }
     }
+  },
+  optimizeDeps: {
+    include: ['react', 'react-dom', 'react-router-dom', 'ethers', 'lucide-react', 'react-hot-toast']
+  },
+  define: {
+    __APP_VERSION__: JSON.stringify(process.env.npm_package_version)
   }
 })
 

@@ -1,8 +1,8 @@
 # 🚀 SplitPay - Base Mini App
 
-> **Gastos Compartidos en Base Network**
+> **Gastos Compartidos en Base Network - Optimizado y Simplificado**
 
-SplitPay es una Mini App para Base que permite dividir gastos con amigos usando USDC. Simple, rápido y seguro.
+SplitPay es una Mini App para Base que permite dividir gastos con amigos usando USDC. Simple, rápido, seguro y completamente optimizado para producción.
 
 ## ✨ **Características**
 
@@ -45,7 +45,7 @@ npm run dev
 
 ### **Abrir en el Navegador**
 ```
-http://localhost:3000
+http://localhost:3001
 ```
 
 ## ⚙️ **Configuración**
@@ -124,13 +124,17 @@ VITE_USDC_CONTRACT_BASE=0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913
 
 ```bash
 # Desarrollo
-npm run dev          # Servidor de desarrollo
-npm run build        # Build de producción
+npm run dev          # Servidor de desarrollo (puerto 3001)
+npm run build        # Build de producción optimizado
 npm run preview      # Preview del build
 
 # Calidad de Código
-npm run lint         # Linter
-npm run type-check   # Verificación de tipos
+npm run lint         # ESLint con reglas estrictas
+npm run type-check   # Verificación de tipos TypeScript
+
+# Análisis
+npm run analyze      # Análisis del bundle
+npm run test         # Tests unitarios (cuando esté configurado)
 ```
 
 ## 🌐 **Base Network**

@@ -1,24 +1,12 @@
-import React, { createContext, useContext, useEffect, useState, ReactNode, useCallback } from 'react'
+import React, { createContext, useContext, useEffect, useState, ReactNode, useCallback, useMemo } from 'react'
 import { ethers } from 'ethers'
 import toast from 'react-hot-toast'
+import { BASE_NETWORK, SUPPORTED_NETWORKS, ERROR_MESSAGES, SUCCESS_MESSAGES } from '../constants'
+import type { NetworkConfig } from '../types'
 
 // ===========================================
 // Types & Interfaces
 // ===========================================
-
-interface NetworkConfig {
-  chainId: number
-  name: string
-  rpcUrl: string
-  blockExplorer: string
-  nativeCurrency: {
-    name: string
-    symbol: string
-    decimals: number
-  }
-  color: string
-  enabled: boolean
-}
 
 interface Web3ContextType {
   // Connection state
@@ -32,9 +20,10 @@ interface Web3ContextType {
   // Network management
   currentNetwork: NetworkConfig | null
   supportedNetworks: NetworkConfig[]
+  isBaseNetwork: boolean
   
   // Actions
-  connectWallet: () => Promise<void>
+  connectWallet: (walletType?: 'metamask' | 'rabby' | 'coinbase' | 'trust' | 'default') => Promise<void>
   disconnectWallet: () => void
   switchNetwork: (chainId: number) => Promise<void>
   addNetwork: (chainId: number) => Promise<void>
@@ -44,40 +33,6 @@ interface Web3ContextType {
   getNetworkName: (chainId: number) => string
   isNetworkSupported: (chainId: number) => boolean
 }
-
-// ===========================================
-// Network Configuration - SOLO BASE
-// ===========================================
-
-const SUPPORTED_NETWORKS: NetworkConfig[] = [
-  {
-    chainId: 8453,
-    name: 'Base',
-    rpcUrl: 'https://mainnet.base.org',
-    blockExplorer: 'https://basescan.org',
-    nativeCurrency: {
-      name: 'Ethereum',
-      symbol: 'ETH',
-      decimals: 18,
-    },
-    color: '#0052FF',
-    enabled: true,
-  },
-  // Base Sepolia para testing
-  {
-    chainId: 84532,
-    name: 'Base Sepolia',
-    rpcUrl: 'https://sepolia.base.org',
-    blockExplorer: 'https://sepolia.basescan.org',
-    nativeCurrency: {
-      name: 'Ethereum',
-      symbol: 'ETH',
-      decimals: 18,
-    },
-    color: '#0052FF',
-    enabled: import.meta.env.NODE_ENV === 'development',
-  },
-]
 
 // ===========================================
 // Context Creation
@@ -100,7 +55,7 @@ export const Web3Provider: React.FC<{ children: ReactNode }> = ({ children }) =>
   // Computed values
   const isConnected = !!account && !!provider
   const currentNetwork = SUPPORTED_NETWORKS.find(network => network.chainId === chainId) || null
-  const supportedNetworks = SUPPORTED_NETWORKS.filter(network => network.enabled)
+  const isBaseNetwork = chainId === BASE_NETWORK.chainId
 
   // ===========================================
   // Utility Functions
@@ -124,15 +79,35 @@ export const Web3Provider: React.FC<{ children: ReactNode }> = ({ children }) =>
   // Wallet Connection
   // ===========================================
 
-  const connectWallet = useCallback(async (): Promise<void> => {
-    if (!window.ethereum) {
-      toast.error('MetaMask no está instalado. Por favor, instala MetaMask para continuar.')
-      return
+  const getWalletProvider = useCallback((walletType: 'metamask' | 'rabby' | 'coinbase' | 'trust' | 'default' = 'default') => {
+    if (typeof window === 'undefined') return null;
+
+    switch (walletType) {
+      case 'metamask':
+        return (window.ethereum as any)?.isMetaMask ? window.ethereum : null;
+      case 'rabby':
+        return (window.ethereum as any)?.isRabby ? window.ethereum : null;
+      case 'coinbase':
+        return (window.ethereum as any)?.isCoinbaseWallet ? window.ethereum : null;
+      case 'trust':
+        return (window.ethereum as any)?.isTrust ? window.ethereum : null;
+      case 'default':
+      default:
+        return window.ethereum; // Fallback to generic ethereum provider
+    }
+  }, []);
+
+  const connectWallet = useCallback(async (walletType: 'metamask' | 'rabby' | 'coinbase' | 'trust' | 'default' = 'default'): Promise<void> => {
+    const selectedProvider = getWalletProvider(walletType);
+
+    if (!selectedProvider) {
+      toast.error(ERROR_MESSAGES.METAMASK_NOT_INSTALLED);
+      return;
     }
 
     setIsLoading(true)
     try {
-      const provider = new ethers.BrowserProvider(window.ethereum)
+      const provider = new ethers.BrowserProvider(selectedProvider)
       
       // Request account access
       const accounts = await provider.send('eth_requestAccounts', [])
@@ -147,9 +122,9 @@ export const Web3Provider: React.FC<{ children: ReactNode }> = ({ children }) =>
 
       // Check if network is supported
       if (!isNetworkSupported(currentChainId)) {
-        toast.error(`Red no soportada: ${getNetworkName(currentChainId)}`)
+        toast.error(`${ERROR_MESSAGES.UNSUPPORTED_NETWORK} ${getNetworkName(currentChainId)}`)
         // Auto-switch to Base
-        await switchNetwork(8453)
+        await switchNetwork(BASE_NETWORK.chainId)
         return
       }
 
@@ -158,7 +133,7 @@ export const Web3Provider: React.FC<{ children: ReactNode }> = ({ children }) =>
       setAccount(accounts[0])
       setChainId(currentChainId)
 
-      toast.success(`Wallet conectada en ${getNetworkName(currentChainId)}`)
+      toast.success(`${SUCCESS_MESSAGES.WALLET_CONNECTED} ${getNetworkName(currentChainId)}`)
       
       // Log connection for analytics
       console.log('🔗 Wallet conectada:', {
@@ -167,27 +142,32 @@ export const Web3Provider: React.FC<{ children: ReactNode }> = ({ children }) =>
         chainId: currentChainId
       })
 
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Error connecting wallet:', error)
       
-      if (error.code === 4001) {
-        toast.error('Conexión cancelada por el usuario')
-      } else if (error.code === -32002) {
-        toast.error('Conexión ya en progreso. Por favor, espera.')
+      if (typeof error === 'object' && error !== null && 'code' in error) {
+        const errorCode = (error as { code: unknown }).code
+        if (errorCode === 4001) {
+          toast.error(ERROR_MESSAGES.CONNECTION_CANCELLED)
+        } else if (errorCode === -32002) {
+          toast.error(ERROR_MESSAGES.CONNECTION_IN_PROGRESS)
+        } else {
+          toast.error(`${ERROR_MESSAGES.GENERIC_CONNECTION_ERROR} ${String(error)}`)
+        }
       } else {
-        toast.error(`Error al conectar wallet: ${error.message}`)
+        toast.error(`${ERROR_MESSAGES.GENERIC_CONNECTION_ERROR} ${String(error)}`)
       }
     } finally {
       setIsLoading(false)
     }
-  }, [isNetworkSupported, getNetworkName])
+  }, [isNetworkSupported, getNetworkName, getWalletProvider])
 
   const disconnectWallet = useCallback((): void => {
     setAccount(null)
     setChainId(null)
     setProvider(null)
     setSigner(null)
-    toast.success('Wallet desconectada')
+    toast.success(SUCCESS_MESSAGES.WALLET_DISCONNECTED)
     
     console.log('🔌 Wallet desconectada')
   }, [])
@@ -198,13 +178,13 @@ export const Web3Provider: React.FC<{ children: ReactNode }> = ({ children }) =>
 
   const switchNetwork = useCallback(async (targetChainId: number): Promise<void> => {
     if (!window.ethereum) {
-      toast.error('MetaMask no está disponible')
+      toast.error(ERROR_MESSAGES.METAMASK_NOT_INSTALLED)
       return
     }
 
     const targetNetwork = SUPPORTED_NETWORKS.find(n => n.chainId === targetChainId)
     if (!targetNetwork) {
-      toast.error('Red no soportada')
+      toast.error(ERROR_MESSAGES.UNSUPPORTED_NETWORK)
       return
     }
 
@@ -215,10 +195,10 @@ export const Web3Provider: React.FC<{ children: ReactNode }> = ({ children }) =>
         params: [{ chainId: `0x${targetChainId.toString(16)}` }],
       })
 
-      toast.success(`Cambiado a ${targetNetwork.name}`)
+      toast.success(`${SUCCESS_MESSAGES.NETWORK_SWITCHED} ${targetNetwork.name}`)
       
-    } catch (error: any) {
-      if (error.code === 4902) {
+    } catch (error: unknown) {
+      if (typeof error === 'object' && error !== null && 'code' in error && (error as { code: number }).code === 4902) {
         // Network not added, try to add it
         await addNetwork(targetChainId)
       } else {
@@ -233,7 +213,7 @@ export const Web3Provider: React.FC<{ children: ReactNode }> = ({ children }) =>
 
     const network = SUPPORTED_NETWORKS.find(n => n.chainId === chainId)
     if (!network) {
-      toast.error('Red no soportada')
+      toast.error(ERROR_MESSAGES.UNSUPPORTED_NETWORK)
       return
     }
 
@@ -251,14 +231,14 @@ export const Web3Provider: React.FC<{ children: ReactNode }> = ({ children }) =>
         ],
       })
 
-      toast.success(`${network.name} agregada exitosamente`)
+      toast.success(`${network.name} ${SUCCESS_MESSAGES.NETWORK_ADDED}`)
       
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Error adding network:', error)
-      if (error.code === 4001) {
-        toast.error('Agregar red cancelado por el usuario')
+      if (typeof error === 'object' && error !== null && 'code' in error && (error as { code: number }).code === 4001) {
+        toast.error(ERROR_MESSAGES.ADD_NETWORK_CANCELLED)
       } else {
-        toast.error(`Error al agregar ${network.name}`)
+        toast.error(`${ERROR_MESSAGES.GENERIC_ADD_NETWORK_ERROR} ${network.name}`)
       }
     }
   }, [])
@@ -311,9 +291,9 @@ export const Web3Provider: React.FC<{ children: ReactNode }> = ({ children }) =>
       setChainId(newChainId)
       
       if (isNetworkSupported(newChainId)) {
-        toast.success(`Cambiado a ${getNetworkName(newChainId)}`)
+        toast.success(`${SUCCESS_MESSAGES.NETWORK_SWITCHED} ${getNetworkName(newChainId)}`)
       } else {
-        toast.error(`Red no soportada: ${getNetworkName(newChainId)}`)
+        toast.error(`${ERROR_MESSAGES.UNSUPPORTED_NETWORK} ${getNetworkName(newChainId)}`)
       }
       
       // Reload page to ensure clean state
@@ -326,7 +306,7 @@ export const Web3Provider: React.FC<{ children: ReactNode }> = ({ children }) =>
     }
 
     // Disconnect event listener
-    const handleDisconnect = (error: any) => {
+    const handleDisconnect = (error: unknown) => {
       console.log('🔌 Wallet desconectada:', error)
       disconnectWallet()
     }
@@ -346,13 +326,13 @@ export const Web3Provider: React.FC<{ children: ReactNode }> = ({ children }) =>
         window.ethereum.removeListener('disconnect', handleDisconnect)
       }
     }
-  }, [disconnectWallet, isNetworkSupported, getNetworkName])
+  }, [disconnectWallet, isNetworkSupported, getNetworkName, switchNetwork])
 
   // ===========================================
   // Context Value
   // ===========================================
 
-  const value: Web3ContextType = {
+  const value: Web3ContextType = useMemo(() => ({
     // Connection state
     account,
     chainId,
@@ -363,7 +343,8 @@ export const Web3Provider: React.FC<{ children: ReactNode }> = ({ children }) =>
     
     // Network management
     currentNetwork,
-    supportedNetworks,
+    supportedNetworks: SUPPORTED_NETWORKS,
+    isBaseNetwork,
     
     // Actions
     connectWallet,
@@ -375,7 +356,23 @@ export const Web3Provider: React.FC<{ children: ReactNode }> = ({ children }) =>
     formatAddress,
     getNetworkName,
     isNetworkSupported,
-  }
+  }), [
+    account,
+    chainId,
+    provider,
+    signer,
+    isConnected,
+    isLoading,
+    currentNetwork,
+    isBaseNetwork,
+    connectWallet,
+    disconnectWallet,
+    switchNetwork,
+    addNetwork,
+    formatAddress,
+    getNetworkName,
+    isNetworkSupported,
+  ])
 
   return <Web3Context.Provider value={value}>{children}</Web3Context.Provider>
 }

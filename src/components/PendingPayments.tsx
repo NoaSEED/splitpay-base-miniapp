@@ -1,6 +1,7 @@
 import React, { useState } from 'react'
 import { useWeb3 } from '../contexts/Web3Context'
-import { useGroups, Payment } from '../contexts/GroupContext'
+import { useGroups } from '../contexts/GroupContext'
+import type { Payment } from '../types'
 import { AlertCircle, CheckCircle, Clock, User, DollarSign, Bell, XCircle } from 'lucide-react'
 import CompletePayment from './CompletePayment'
 import RequestPayment from './RequestPayment'

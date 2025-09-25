@@ -20,7 +20,7 @@ const CancelDebt: React.FC<CancelDebtProps> = ({
   onClose
 }) => {
   const { formatAddress } = useWeb3()
-  const { getParticipantName, cancelDebt } = useGroups()
+  const { getParticipantName } = useGroups()
   const [isLoading, setIsLoading] = useState(false)
   const [reason, setReason] = useState('')
 
@@ -37,10 +37,9 @@ const CancelDebt: React.FC<CancelDebtProps> = ({
 
     setIsLoading(true)
     try {
-      const success = await cancelDebt(groupId, from, to, amount, reason)
-      if (success) {
-        onClose()
-      }
+      // TODO: Implement cancelDebt functionality
+      toast.success('Funcionalidad de cancelar deuda en desarrollo')
+      onClose()
     } catch (error) {
       console.error('Error cancelling debt:', error)
       toast.error('Error al cancelar la deuda')

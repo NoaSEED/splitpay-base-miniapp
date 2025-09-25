@@ -40,7 +40,7 @@ const WalletConnect: React.FC = () => {
   if (!isConnected) {
     return (
       <button
-        onClick={connectWallet}
+        onClick={() => connectWallet()}
         className="flex items-center space-x-2 px-4 py-2 bg-base-500 text-white rounded-lg hover:bg-base-600 transition-colors"
       >
         <Wallet className="w-4 h-4" />

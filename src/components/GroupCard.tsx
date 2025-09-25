@@ -1,10 +1,10 @@
 import React from 'react'
 import { Link } from 'react-router-dom'
 import { Users, DollarSign, Calendar, MoreHorizontal } from 'lucide-react'
-import { GroupData } from '../contexts/GroupContext'
+import type { Group } from '../types'
 
 interface GroupCardProps {
-  group: GroupData
+  group: Group
 }
 
 const GroupCard: React.FC<GroupCardProps> = ({ group }) => {
@@ -99,7 +99,7 @@ const GroupCard: React.FC<GroupCardProps> = ({ group }) => {
         <div className="mb-4">
           <p className="text-sm font-medium text-gray-700 mb-2">Participantes:</p>
           <div className="flex flex-wrap gap-2">
-            {group.participants.slice(0, 3).map((participant, index) => (
+            {group.participants.slice(0, 3).map((participant: string, index: number) => (
               <span
                 key={index}
                 className="px-2 py-1 bg-base-100 text-base-700 rounded-md text-xs font-mono"

@@ -74,15 +74,8 @@ const CreateGroup: React.FC = () => {
       const success = await createGroup({
         name: formData.name,
         description: formData.description,
-        currency: 'USDC',
         category: formData.category,
-        divisionMethod: formData.divisionMethod,
-        participants: participants.map(p => p.address),
-        participantNames,
-        payments: [],
-        startDate: formData.startDate,
-        endDate: formData.endDate || undefined,
-        status: 'active'
+        participants: participants.map(p => p.address)
       })
 
       if (success) {

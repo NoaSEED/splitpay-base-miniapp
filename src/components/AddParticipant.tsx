@@ -48,7 +48,7 @@ const AddParticipant: React.FC<AddParticipantProps> = ({
       setAddress('')
       setName('')
       toast.success(`Participante "${name}" agregado`)
-    } catch (error) {
+    } catch {
       toast.error('Error al agregar participante')
     } finally {
       setIsLoading(false)

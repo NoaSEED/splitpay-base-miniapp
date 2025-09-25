@@ -40,7 +40,7 @@ const CompletePayment: React.FC<CompletePaymentProps> = ({
     try {
       await onComplete(paymentId, transactionHash.trim())
       onClose()
-    } catch (error) {
+    } catch {
       toast.error('Error al completar el pago')
     } finally {
       setIsLoading(false)
