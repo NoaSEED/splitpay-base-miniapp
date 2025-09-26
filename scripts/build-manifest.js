@@ -24,9 +24,24 @@ const farcasterManifest = {
     version: "1",
     name: "SplitPay",
     homeUrl: "https://splitpay-base-miniapp.vercel.app/",
-    imageUrl: "https://splitpay-base-miniapp.vercel.app/og-image.png",
-    postUrl: "https://splitpay-base-miniapp.vercel.app/api/webhook",
-    inputText: "SplitPay - Gastos Compartidos en Base"
+    iconUrl: "https://splitpay-base-miniapp.vercel.app/icon.png",
+    splashImageUrl: "https://splitpay-base-miniapp.vercel.app/splash.png",
+    splashBackgroundColor: "#0052FF",
+    webhookUrl: "https://splitpay-base-miniapp.vercel.app/api/webhook",
+    subtitle: "Gastos Compartidos en Base",
+    description: "Divide gastos con amigos usando USDC en Base Network. Simple, rápido y seguro.",
+    screenshotUrls: [
+      "https://splitpay-base-miniapp.vercel.app/screenshot-portrait.png",
+      "https://splitpay-base-miniapp.vercel.app/screenshot-landscape.png"
+    ],
+    primaryCategory: "finance",
+    tags: ["finance", "payments", "base", "usdc", "split-bills"],
+    heroImageUrl: "https://splitpay-base-miniapp.vercel.app/hero.png",
+    tagline: "Divide gastos con amigos en Base",
+    ogTitle: "SplitPay - Gastos Compartidos en Base",
+    ogDescription: "Divide gastos con amigos usando USDC en Base Network.",
+    ogImageUrl: "https://splitpay-base-miniapp.vercel.app/og-image.png",
+    noindex: false
   }
 }
 
