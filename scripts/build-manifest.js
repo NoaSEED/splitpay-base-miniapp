@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 
-import { readFileSync, writeFileSync, mkdirSync } from 'fs'
+import { writeFileSync, mkdirSync } from 'fs'
 import { join, dirname } from 'path'
 import { fileURLToPath } from 'url'
 
@@ -8,22 +8,7 @@ const __filename = fileURLToPath(import.meta.url)
 const __dirname = dirname(__filename)
 const rootDir = join(__dirname, '..')
 
-// Import the minikit config
-const configPath = join(rootDir, 'minikit.config.ts')
-const configContent = readFileSync(configPath, 'utf8')
-
-// Extract the config object (simple regex approach)
-const configMatch = configContent.match(/export const minikitConfig = ({[\s\S]*?});/m)
-if (!configMatch) {
-  console.error('Could not find minikitConfig in minikit.config.ts')
-  process.exit(1)
-}
-
-// Parse the config (this is a simplified approach)
-const configStr = configMatch[1]
-  .replace(/\/\*[\s\S]*?\*\//g, '') // Remove block comments
-  .replace(/\/\/.*$/gm, '') // Remove line comments
-  .replace(/\s+/g, ' ') // Normalize whitespace
+console.log('🔧 Building Base Mini App manifest...')
 
 // Create the farcaster.json manifest
 const farcasterManifest = {
