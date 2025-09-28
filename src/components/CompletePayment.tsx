@@ -24,15 +24,9 @@ const CompletePayment: React.FC<CompletePaymentProps> = ({
   // Verificar que estamos dentro del contexto correcto
   console.log('🔍 CompletePayment: Iniciando componente')
   
-  let provider = null
-  try {
-    const web3Context = useWeb3()
-    provider = web3Context.provider
-    console.log('🔍 CompletePayment: useWeb3 hook ejecutado, provider:', provider)
-  } catch (error) {
-    console.error('❌ CompletePayment: Error en useWeb3:', error)
-    throw error
-  }
+  // Los hooks deben llamarse siempre en el nivel superior
+  const { provider } = useWeb3()
+  console.log('🔍 CompletePayment: useWeb3 hook ejecutado, provider:', provider)
   
   const [transactionHash, setTransactionHash] = useState('')
   const [isLoading, setIsLoading] = useState(false)
