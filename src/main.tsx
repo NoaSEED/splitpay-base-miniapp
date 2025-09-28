@@ -4,15 +4,17 @@ import { BrowserRouter } from 'react-router-dom'
 import { Toaster } from 'react-hot-toast'
 import { Web3Provider } from './contexts/Web3Context'
 import { GroupProvider } from './contexts/GroupContext'
+import { LanguageProvider } from './contexts/LanguageContext'
 import App from './App'
 import './index.css'
 
 ReactDOM.createRoot(document.getElementById('root')!).render(
   <React.StrictMode>
     <BrowserRouter>
-      <Web3Provider>
-        <GroupProvider>
-          <App />
+      <LanguageProvider>
+        <Web3Provider>
+          <GroupProvider>
+            <App />
           <Toaster
             position="top-right"
             toastOptions={{
@@ -45,8 +47,9 @@ ReactDOM.createRoot(document.getElementById('root')!).render(
               },
             }}
           />
-        </GroupProvider>
-      </Web3Provider>
+          </GroupProvider>
+        </Web3Provider>
+      </LanguageProvider>
     </BrowserRouter>
   </React.StrictMode>,
 )

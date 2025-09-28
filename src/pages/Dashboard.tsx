@@ -3,11 +3,13 @@ import { Link } from 'react-router-dom'
 import { Plus, Users, DollarSign, TrendingUp } from 'lucide-react'
 import { useWeb3 } from '../contexts/Web3Context'
 import { useGroups } from '../contexts/GroupContext'
+import { useLanguage } from '../contexts/LanguageContext'
 import GroupCard from '../components/GroupCard'
 
 const Dashboard: React.FC = () => {
   const { isConnected, account } = useWeb3()
   const { groups, getGroupsByParticipant } = useGroups()
+  const { t } = useLanguage()
 
   // Get user's groups
   const userGroups = account ? getGroupsByParticipant(account) : groups
@@ -34,14 +36,14 @@ const Dashboard: React.FC = () => {
             <Users className="w-8 h-8 text-base-500" />
           </div>
           <h2 className="text-2xl font-bold text-gray-900 mb-2">
-            Conecta tu Wallet
+            {t('dashboard.connect_wallet')}
           </h2>
           <p className="text-gray-600 mb-6">
-            Conecta tu wallet de Base para comenzar a dividir gastos con tus amigos.
+            {t('dashboard.connect_description')}
           </p>
           <div className="bg-base-50 rounded-lg p-4">
             <p className="text-sm text-base-700">
-              💡 <strong>Tip:</strong> Asegúrate de estar conectado a la red Base para usar SplitPay.
+              {t('dashboard.tip')}
             </p>
           </div>
         </div>
@@ -55,10 +57,10 @@ const Dashboard: React.FC = () => {
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-3xl font-bold text-gray-900">
-            Dashboard
+            {t('dashboard.title')}
           </h1>
           <p className="text-gray-600 mt-1">
-            Gestiona tus gastos compartidos en Base
+            {t('dashboard.manage_expenses')}
           </p>
         </div>
         
@@ -67,7 +69,7 @@ const Dashboard: React.FC = () => {
           className="flex items-center space-x-2 px-4 py-2 bg-base-500 text-white rounded-lg hover:bg-base-600 transition-colors"
         >
           <Plus className="w-4 h-4" />
-          <span>Crear Grupo</span>
+          <span>{t('dashboard.create_group')}</span>
         </Link>
       </div>
 
@@ -79,7 +81,7 @@ const Dashboard: React.FC = () => {
               <Users className="w-6 h-6 text-base-600" />
             </div>
             <div>
-              <p className="text-sm font-medium text-gray-600">Grupos Activos</p>
+              <p className="text-sm font-medium text-gray-600">{t('dashboard.active_groups')}</p>
               <p className="text-2xl font-bold text-gray-900">{totalGroups}</p>
             </div>
           </div>
@@ -91,7 +93,7 @@ const Dashboard: React.FC = () => {
               <DollarSign className="w-6 h-6 text-base-600" />
             </div>
             <div>
-              <p className="text-sm font-medium text-gray-600">Total Gastado</p>
+              <p className="text-sm font-medium text-gray-600">{t('dashboard.total_spent')}</p>
               <p className="text-2xl font-bold text-gray-900">{formatCurrency(totalAmount)}</p>
             </div>
           </div>
@@ -103,7 +105,7 @@ const Dashboard: React.FC = () => {
               <TrendingUp className="w-6 h-6 text-base-600" />
             </div>
             <div>
-              <p className="text-sm font-medium text-gray-600">Gastos Registrados</p>
+              <p className="text-sm font-medium text-gray-600">{t('dashboard.registered_expenses')}</p>
               <p className="text-2xl font-bold text-gray-900">{totalExpenses}</p>
             </div>
           </div>
@@ -114,10 +116,10 @@ const Dashboard: React.FC = () => {
       <div>
         <div className="flex items-center justify-between mb-6">
           <h2 className="text-xl font-semibold text-gray-900">
-            Mis Grupos
+            {t('dashboard.my_groups')}
           </h2>
           <span className="text-sm text-gray-500">
-            {userGroups.length} grupo{userGroups.length !== 1 ? 's' : ''}
+            {userGroups.length} {t('dashboard.groups_count')}
           </span>
         </div>
 
@@ -127,17 +129,17 @@ const Dashboard: React.FC = () => {
               <Users className="w-8 h-8 text-base-500" />
             </div>
             <h3 className="text-lg font-semibold text-gray-900 mb-2">
-              No tienes grupos aún
+              {t('ui.no_groups')}
             </h3>
             <p className="text-gray-600 mb-6">
-              Crea tu primer grupo para comenzar a dividir gastos con tus amigos.
+              {t('dashboard.create_first_group')}
             </p>
             <Link
               to="/create-group"
               className="inline-flex items-center space-x-2 px-4 py-2 bg-base-500 text-white rounded-lg hover:bg-base-600 transition-colors"
             >
               <Plus className="w-4 h-4" />
-              <span>Crear Primer Grupo</span>
+              <span>{t('ui.create_new_group')}</span>
             </Link>
           </div>
         ) : (
@@ -163,8 +165,8 @@ const Dashboard: React.FC = () => {
               <Plus className="w-5 h-5 text-base-600" />
             </div>
             <div>
-              <p className="font-medium text-gray-900">Crear Nuevo Grupo</p>
-              <p className="text-sm text-gray-600">Inicia un nuevo grupo de gastos</p>
+              <p className="font-medium text-gray-900">{t('ui.create_new_group')}</p>
+              <p className="text-sm text-gray-600">{t('ui.start_new_group')}</p>
             </div>
           </Link>
         </div>

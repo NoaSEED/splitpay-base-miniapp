@@ -1,7 +1,6 @@
-import React from 'react'
+import React, { useState } from 'react'
 import { Wallet, LogOut, Copy, Check } from 'lucide-react'
 import { useWeb3 } from '../contexts/Web3Context'
-import { useState } from 'react'
 
 const WalletConnect: React.FC = () => {
   const { 

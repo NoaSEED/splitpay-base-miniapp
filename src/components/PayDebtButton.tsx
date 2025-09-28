@@ -1,11 +1,13 @@
 import React, { useState } from 'react'
 import { useWeb3 } from '../contexts/Web3Context'
 import { useGroups } from '../contexts/GroupContext'
+import { useLanguage } from '../contexts/LanguageContext'
 import { OptimizedButton } from './OptimizedButton'
 import { OptimizedInput } from './OptimizedInput'
 import { OptimizedCard } from './OptimizedCard'
 import { X, CreditCard, CheckCircle, AlertCircle } from 'lucide-react'
 import toast from 'react-hot-toast'
+import { validateTransaction } from '../utils/transactionValidator'
 
 interface PayDebtButtonProps {
   groupId: string
@@ -22,8 +24,9 @@ const PayDebtButton: React.FC<PayDebtButtonProps> = ({
   toAddress,
   onPaymentCompleted
 }) => {
-  const { account } = useWeb3()
+  const { account, provider } = useWeb3()
   const { getParticipantName } = useGroups()
+  const { t, translateNotification } = useLanguage()
   
   const [showPaymentModal, setShowPaymentModal] = useState(false)
   const [transactionHash, setTransactionHash] = useState('')
@@ -37,13 +40,13 @@ const PayDebtButton: React.FC<PayDebtButtonProps> = ({
 
   const handlePayDebt = async () => {
     if (!transactionHash.trim()) {
-      setError('Por favor ingresa el hash de la transacción')
+      setError(t('payment.transaction_hash_required'))
       return
     }
 
     // Validar formato de hash de transacción
     if (!/^0x[a-fA-F0-9]{64}$/.test(transactionHash.trim())) {
-      setError('Por favor ingresa un hash de transacción válido (0x...)')
+      setError(t('payment.transaction_hash_invalid_format'))
       return
     }
 
@@ -51,6 +54,28 @@ const PayDebtButton: React.FC<PayDebtButtonProps> = ({
     setError(null)
 
     try {
+      const { provider } = useWeb3()
+      if (!provider) {
+        setError('No hay conexión a Web3')
+        return
+      }
+
+      const validationResult = await validateTransaction(
+        transactionHash.trim(),
+        fromAddress,
+        toAddress,
+        debtAmount,
+        provider
+      )
+
+      if (!validationResult.isValid) {
+        setError(validationResult.error || 'Transacción inválida')
+        console.error('❌ Validación fallida:', validationResult.error)
+        return
+      }
+
+      console.log('✅ Transacción validada correctamente:', validationResult.transactionData)
+      toast.success(t('payment.validate_success'))
       // Generar ID único para el pago
       const paymentId = `payment_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`
       
@@ -77,7 +102,11 @@ const PayDebtButton: React.FC<PayDebtButtonProps> = ({
             type: 'payment_completed',
             groupId: group.id,
             groupName: group.name,
-            message: `¡Has recibido un pago de ${debtAmount.toFixed(2)} USDC de ${group.participantNames?.[fromAddress.toLowerCase()] || `${fromAddress.slice(0, 6)}...${fromAddress.slice(-4)}`} en "${group.name}"!`,
+            message: translateNotification('notifications.payment_received', {
+              amount: debtAmount.toFixed(2),
+              from: group.participantNames?.[fromAddress.toLowerCase()] || `${fromAddress.slice(0, 6)}...${fromAddress.slice(-4)}`,
+              group: group.name
+            }),
             amount: debtAmount,
             from: fromAddress,
             to: toAddress,

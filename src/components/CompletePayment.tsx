@@ -1,6 +1,9 @@
 import React, { useState } from 'react'
 import { CheckCircle, X, Copy } from 'lucide-react'
 import toast from 'react-hot-toast'
+import { useWeb3 } from '../contexts/Web3Context'
+import { useLanguage } from '../contexts/LanguageContext'
+import { validateTransaction } from '../utils/transactionValidator'
 
 interface CompletePaymentProps {
   paymentId: string
@@ -19,6 +22,8 @@ const CompletePayment: React.FC<CompletePaymentProps> = ({
   onComplete,
   onClose
 }) => {
+  const { provider } = useWeb3()
+  const { t } = useLanguage()
   const [transactionHash, setTransactionHash] = useState('')
   const [isLoading, setIsLoading] = useState(false)
 
@@ -26,22 +31,53 @@ const CompletePayment: React.FC<CompletePaymentProps> = ({
     e.preventDefault()
     
     if (!transactionHash.trim()) {
-      toast.error('Por favor ingresa el hash de la transacción')
+      toast.error(t('payment.transaction_hash_required'))
       return
     }
 
     // Validar formato de hash de transacción
     if (!/^0x[a-fA-F0-9]{64}$/.test(transactionHash.trim())) {
-      toast.error('Por favor ingresa un hash de transacción válido (0x + 64 caracteres)')
+      toast.error(t('payment.transaction_hash_invalid_format'))
       return
     }
 
     setIsLoading(true)
     try {
+      // ✅ NUEVA VALIDACIÓN DE TRANSACCIÓN
+      if (!provider) {
+        toast.error('No hay conexión a Web3')
+        return
+      }
+
+      console.log('🔍 Validando transacción:', {
+        hash: transactionHash.trim(),
+        from,
+        to,
+        amount
+      })
+
+      const validationResult = await validateTransaction(
+        transactionHash.trim(),
+        from,
+        to,
+        amount,
+        provider
+      )
+
+      if (!validationResult.isValid) {
+        toast.error(validationResult.error || 'Transacción inválida')
+        console.error('❌ Validación fallida:', validationResult.error)
+        return
+      }
+
+      console.log('✅ Transacción validada correctamente:', validationResult.transactionData)
+      toast.success(t('payment.validate_success'))
+
       await onComplete(paymentId, transactionHash.trim())
       onClose()
-    } catch {
-      toast.error('Error al completar el pago')
+    } catch (error: unknown) {
+      console.error('Error validating transaction:', error)
+      toast.error(error instanceof Error ? error.message : 'Error al validar la transacción')
     } finally {
       setIsLoading(false)
     }

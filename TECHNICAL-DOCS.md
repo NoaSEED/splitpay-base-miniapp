@@ -552,3 +552,5 @@ Para preguntas técnicas o reportar bugs:
 **Última actualización**: Diciembre 2024
 **Versión**: 1.0.0
 **Autor**: Equipo SplitPay
+
+

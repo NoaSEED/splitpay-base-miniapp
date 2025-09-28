@@ -113,3 +113,5 @@ export const VALIDATION_PATTERNS = {
   GROUP_NAME: /^[a-zA-Z0-9\s\-_]{1,50}$/,
   AMOUNT: /^\d+(\.\d{1,2})?$/,
 }
+
+

@@ -3,6 +3,8 @@ import { Link, useLocation } from 'react-router-dom'
 import { Wallet, Users, Plus, Home, Twitter } from 'lucide-react'
 import WalletConnect from './WalletConnect'
 import PaymentNotifications from './PaymentNotifications'
+import LanguageSelector from './LanguageSelector'
+import { useLanguage } from '../contexts/LanguageContext'
 
 interface LayoutProps {
   children: React.ReactNode
@@ -10,6 +12,7 @@ interface LayoutProps {
 
 const Layout: React.FC<LayoutProps> = ({ children }) => {
   const location = useLocation()
+  const { t } = useLanguage()
 
   const isActive = (path: string) => {
     return location.pathname === path
@@ -27,7 +30,7 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
                 <div className="w-8 h-8 bg-base-500 rounded-lg flex items-center justify-center">
                   <Users className="w-5 h-5 text-white" />
                 </div>
-                <span className="text-xl font-bold text-base-900">SplitPay</span>
+                <span className="text-xl font-bold text-base-900">{t('app.name')}</span>
               </Link>
             </div>
 
@@ -42,7 +45,7 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
                 }`}
               >
                 <Home className="w-4 h-4" />
-                <span>Dashboard</span>
+                <span>{t('nav.dashboard')}</span>
               </Link>
               
               <Link
@@ -54,12 +57,13 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
                 }`}
               >
                 <Plus className="w-4 h-4" />
-                <span>Crear Grupo</span>
+                <span>{t('nav.create_group')}</span>
               </Link>
             </nav>
 
-            {/* Wallet Connect */}
+            {/* Wallet Connect & Language */}
             <div className="flex items-center space-x-4">
+              <LanguageSelector />
               <WalletConnect />
             </div>
           </div>
@@ -80,18 +84,18 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
           <div className="flex flex-col md:flex-row justify-between items-center space-y-4 md:space-y-0">
             <div className="flex items-center space-x-2 text-sm text-gray-600">
               <Wallet className="w-4 h-4" />
-              <span>Powered by Base Network</span>
+              <span>{t('footer.powered_by')}</span>
             </div>
             
             <div className="flex items-center space-x-4 text-sm text-gray-600">
-              <span>© 2024 SplitPay</span>
+              <span>{t('footer.copyright')}</span>
               <span>•</span>
-              <span>Gastos Compartidos en Base</span>
+              <span>{t('footer.shared_expenses')}</span>
             </div>
 
             {/* Creator Info - Delicate Design */}
             <div className="flex items-center space-x-2">
-              <span className="text-sm text-gray-400">Creado por</span>
+              <span className="text-sm text-gray-400">{t('footer.created_by')}</span>
               <a
                 href="https://x.com/SeedsPuntoEth"
                 target="_blank"
@@ -111,12 +115,9 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
           <div className="mt-4 pt-4 border-t border-base-200">
             <div className="flex flex-col md:flex-row justify-between items-center text-xs text-gray-500 space-y-2 md:space-y-0">
               <div className="flex items-center space-x-4">
-                <span>🔒 Transacciones seguras en Base</span>
+                <span>🔒 {t('footer.secure_transactions')}</span>
                 <span>•</span>
-                <span>💎 USDC como moneda estable</span>
-              </div>
-              <div className="flex items-center space-x-2">
-                <span>Hecho con ❤️ para la comunidad Base</span>
+                <span>💎 {t('footer.usdc_stable')}</span>
               </div>
             </div>
           </div>
