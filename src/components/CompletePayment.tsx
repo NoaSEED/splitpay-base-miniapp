@@ -21,19 +21,7 @@ const CompletePayment: React.FC<CompletePaymentProps> = ({
   onComplete,
   onClose
 }) => {
-  // Verificar que estamos dentro del contexto correcto
-  console.log('🔍 CompletePayment: Iniciando componente')
-  
-  // Verificar que estamos en un componente funcional válido
-  console.log('🔍 CompletePayment: Componente funcional válido')
-  
-  // Test: Intentar usar un hook simple primero
-  const [testState] = useState('test')
-  console.log('🔍 CompletePayment: useState hook ejecutado, testState:', testState)
-  
-  // Los hooks deben llamarse siempre en el nivel superior
   const { provider } = useWeb3()
-  console.log('🔍 CompletePayment: useWeb3 hook ejecutado, provider:', provider)
   
   const [transactionHash, setTransactionHash] = useState('')
   const [isLoading, setIsLoading] = useState(false)
@@ -145,8 +133,6 @@ const CompletePayment: React.FC<CompletePaymentProps> = ({
     return `${address.slice(0, 6)}...${address.slice(-4)}`
   }
 
-  console.log('🔍 CompletePayment: Renderizando modal')
-  
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
       <div className="bg-white p-6 rounded-xl shadow-lg w-full max-w-md">

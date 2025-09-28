@@ -24,7 +24,7 @@ const PayDebtButton: React.FC<PayDebtButtonProps> = ({
   toAddress,
   onPaymentCompleted
 }) => {
-  const { account } = useWeb3()
+  const { account, provider } = useWeb3()
   const { getParticipantName } = useGroups()
   const { t, translateNotification } = useLanguage()
   
@@ -54,7 +54,6 @@ const PayDebtButton: React.FC<PayDebtButtonProps> = ({
     setError(null)
 
     try {
-      const { provider } = useWeb3()
       if (!provider) {
         setError('No hay conexión a Web3')
         return
