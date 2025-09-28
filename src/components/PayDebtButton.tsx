@@ -24,7 +24,7 @@ const PayDebtButton: React.FC<PayDebtButtonProps> = ({
   toAddress,
   onPaymentCompleted
 }) => {
-  const { account, provider } = useWeb3()
+  const { account } = useWeb3()
   const { getParticipantName } = useGroups()
   const { t, translateNotification } = useLanguage()
   
