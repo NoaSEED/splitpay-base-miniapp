@@ -24,6 +24,13 @@ const CompletePayment: React.FC<CompletePaymentProps> = ({
   // Verificar que estamos dentro del contexto correcto
   console.log('🔍 CompletePayment: Iniciando componente')
   
+  // Verificar que estamos en un componente funcional válido
+  console.log('🔍 CompletePayment: Componente funcional válido')
+  
+  // Test: Intentar usar un hook simple primero
+  const [testState] = useState('test')
+  console.log('🔍 CompletePayment: useState hook ejecutado, testState:', testState)
+  
   // Los hooks deben llamarse siempre en el nivel superior
   const { provider } = useWeb3()
   console.log('🔍 CompletePayment: useWeb3 hook ejecutado, provider:', provider)
