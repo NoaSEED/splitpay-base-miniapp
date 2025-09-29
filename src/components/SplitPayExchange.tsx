@@ -1,7 +1,5 @@
 import React from 'react'
 import { X, ArrowLeftRight, DollarSign } from 'lucide-react'
-import { useWeb3 } from '../contexts/Web3Context'
-import { useLanguage } from '../contexts/LanguageContext'
 
 interface SplitPayExchangeProps {
   isOpen: boolean
@@ -9,9 +7,6 @@ interface SplitPayExchangeProps {
 }
 
 const SplitPayExchange: React.FC<SplitPayExchangeProps> = ({ isOpen, onClose }) => {
-  const { account } = useWeb3()
-  const { t } = useLanguage()
-
   if (!isOpen) return null
 
   // Token addresses for Base Network
