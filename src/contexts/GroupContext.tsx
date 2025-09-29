@@ -81,8 +81,8 @@ export const GroupProvider: React.FC<{ children: ReactNode }> = ({ children }) =
 
     window.addEventListener('storage', handleStorageChange)
     
-    // También verificar cambios cada segundo (para la misma pestaña)
-    const interval = setInterval(loadGroups, 1000)
+    // Verificar cambios cada 5 segundos (reducido para mejor rendimiento)
+    const interval = setInterval(loadGroups, 5000)
 
     return () => {
       window.removeEventListener('storage', handleStorageChange)
