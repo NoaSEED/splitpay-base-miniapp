@@ -1,15 +1,19 @@
-import React from 'react'
+import React, { useState } from 'react'
 import { Link } from 'react-router-dom'
-import { Plus, Users, DollarSign, TrendingUp } from 'lucide-react'
+import { Plus, Users, DollarSign, TrendingUp, ArrowLeftRight } from 'lucide-react'
 import { useWeb3 } from '../contexts/Web3Context'
 import { useGroups } from '../contexts/GroupContext'
 import { useLanguage } from '../contexts/LanguageContext'
 import GroupCard from '../components/GroupCard'
+import SplitPayExchange from '../components/SplitPayExchange'
 
 const Dashboard: React.FC = () => {
   const { isConnected, account } = useWeb3()
   const { groups, getGroupsByParticipant } = useGroups()
   const { t } = useLanguage()
+  
+  // Estado para el modal de swap
+  const [showSwap, setShowSwap] = useState(false)
 
   // Get user's groups
   const userGroups = account ? getGroupsByParticipant(account) : groups
@@ -64,13 +68,26 @@ const Dashboard: React.FC = () => {
           </p>
         </div>
         
-        <Link
-          to="/create-group"
-          className="flex items-center space-x-2 px-4 py-2 bg-base-500 text-white rounded-lg hover:bg-base-600 transition-colors"
-        >
-          <Plus className="w-4 h-4" />
-          <span>{t('dashboard.create_group')}</span>
-        </Link>
+        <div className="flex items-center space-x-3">
+          {/* Botón de Swap */}
+          <button
+            onClick={() => setShowSwap(true)}
+            className="flex items-center space-x-2 px-4 py-2 bg-gradient-to-r from-blue-500 to-blue-600 text-white rounded-lg hover:from-blue-600 hover:to-blue-700 transition-all shadow-md"
+          >
+            <span className="text-lg">🦄</span>
+            <ArrowLeftRight className="w-4 h-4" />
+            <span>Swap</span>
+          </button>
+          
+          {/* Botón de Crear Grupo */}
+          <Link
+            to="/create-group"
+            className="flex items-center space-x-2 px-4 py-2 bg-base-500 text-white rounded-lg hover:bg-base-600 transition-colors"
+          >
+            <Plus className="w-4 h-4" />
+            <span>{t('dashboard.create_group')}</span>
+          </Link>
+        </div>
       </div>
 
       {/* Stats Cards */}
@@ -171,6 +188,12 @@ const Dashboard: React.FC = () => {
           </Link>
         </div>
       </div>
+
+      {/* Modal de Swap */}
+      <SplitPayExchange 
+        isOpen={showSwap}
+        onClose={() => setShowSwap(false)}
+      />
     </div>
   )
 }
