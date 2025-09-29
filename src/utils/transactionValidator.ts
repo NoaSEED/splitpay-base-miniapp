@@ -213,3 +213,5 @@ export const getTransactionUrl = (hash: string): string => {
 export const isValidTransactionHash = (hash: string): boolean => {
   return /^0x[a-fA-F0-9]{64}$/.test(hash)
 }
+
+
