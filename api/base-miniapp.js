@@ -1,19 +1,12 @@
-// Base Mini App endpoint
-// This endpoint provides Base Mini App specific information
-
 export default function handler(req, res) {
-  // Set CORS headers
-  res.setHeader('Access-Control-Allow-Origin', '*');
+  res.setHeader('Access-Control-Allow-Origin', 'https://splitpay-base-miniapp.vercel.app');
   res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
 
-  // Handle preflight requests
   if (req.method === 'OPTIONS') {
     res.status(200).end();
     return;
   }
-
-  // Serve Base Mini App information
   if (req.method === 'GET') {
     const baseMiniAppInfo = {
       version: "1",
@@ -58,6 +51,10 @@ export default function handler(req, res) {
 
     res.status(200).json(baseMiniAppInfo);
   } else {
-    res.status(405).json({ error: 'Method not allowed' });
+    res.status(405).json({ 
+      error: 'Method not allowed',
+      allowed: ['GET'],
+      received: req.method
+    });
   }
 }

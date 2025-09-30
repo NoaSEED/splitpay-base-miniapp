@@ -8,7 +8,8 @@
     "build": "tsc && node scripts/build-manifest.js && vite build",
     "preview": "vite preview --host",
     "base:deploy": "echo 'Deploying to Base Mini Apps...'",
-    "base:validate": "echo 'Validating Base Mini App manifest...'"
+    "base:validate": "echo 'Validating Base Mini App manifest...'",
+    "validate": "node -e \"const fs=require('fs');try{JSON.parse(fs.readFileSync('public/manifest.json','utf8'));console.log('✅ manifest.json válido')}catch(e){console.error('❌ manifest.json inválido:',e.message);process.exit(1)}\""
   },
   "dependencies": {
     "ethers": "^6.8.1",

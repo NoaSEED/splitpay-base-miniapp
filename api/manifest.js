@@ -1,19 +1,12 @@
-// Base Mini App Manifest Endpoint
-// This endpoint serves the manifest for Base Mini Apps
-
 export default function handler(req, res) {
-  // Set CORS headers
-  res.setHeader('Access-Control-Allow-Origin', '*');
+  res.setHeader('Access-Control-Allow-Origin', 'https://splitpay-base-miniapp.vercel.app');
   res.setHeader('Access-Control-Allow-Methods', 'GET, OPTIONS');
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
 
-  // Handle preflight requests
   if (req.method === 'OPTIONS') {
     res.status(200).end();
     return;
   }
-
-  // Serve the Base Mini App manifest
   if (req.method === 'GET') {
     const manifest = {
       version: "1",
@@ -36,6 +29,10 @@ export default function handler(req, res) {
 
     res.status(200).json(manifest);
   } else {
-    res.status(405).json({ error: 'Method not allowed' });
+    res.status(405).json({ 
+      error: 'Method not allowed',
+      allowed: ['GET'],
+      received: req.method
+    });
   }
 }

@@ -1,0 +1,12 @@
+{
+  "version": "1",
+  "name": "SplitPay",
+  "iconUrl": "https://splitpay-base-miniapp.vercel.app/icon.png",
+  "splashImageUrl": "https://splitpay-base-miniapp.vercel.app/splash.png",
+  "splashBackgroundColor": "#0052FF",
+  "homeUrl": "https://splitpay-base-miniapp.vercel.app",
+  "screenshotUrls": [
+    "https://splitpay-base-miniapp.vercel.app/screenshot-portrait.png",
+    "https://splitpay-base-miniapp.vercel.app/screenshot-landscape.png"
+  ]
+}
