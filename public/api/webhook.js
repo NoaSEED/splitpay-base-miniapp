@@ -1,41 +1,40 @@
-// Base Mini App Webhook Endpoint
-// This endpoint handles webhooks from Base
+import { setCORSHeaders } from './middleware/cors.js';
 
+/**
+ * Base Mini App Webhook Handler
+ * Handles incoming webhooks from Base platform
+ * @param {Object} req - Next.js request object
+ * @param {Object} res - Next.js response object
+ */
 export default function handler(req, res) {
-  // Set CORS headers for Base
-  res.setHeader('Access-Control-Allow-Origin', '*');
-  res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
-  res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
+  setCORSHeaders(res);
   
-  // Handle preflight requests
   if (req.method === 'OPTIONS') {
     return res.status(200).end();
   }
   
-  // Log webhook data for debugging
-  console.log('Base webhook received:', {
-    method: req.method,
-    headers: req.headers,
-    body: req.body,
-    query: req.query,
-    timestamp: new Date().toISOString()
-  });
-  
-  // Simple webhook handler
   if (req.method === 'POST') {
-    const { type, data } = req.body || {};
+    if (!req.body || typeof req.body !== 'object') {
+      return res.status(400).json({ error: 'Invalid request body' });
+    }
+    
+    const { type, data } = req.body;
+    
+    if (!type || !data) {
+      return res.status(400).json({ error: 'Missing required fields: type, data' });
+    }
+    
+    const validTypes = ['user_connected', 'user_disconnected', 'transaction_completed'];
+    if (!validTypes.includes(type)) {
+      return res.status(400).json({ error: 'Invalid webhook type' });
+    }
     
     switch (type) {
-      case 'user_action':
-        // Handle user actions from Base
-        console.log('User action:', data);
+      case 'user_connected':
+      case 'user_disconnected':
+      case 'transaction_completed':
+        // Handle webhook events
         break;
-      case 'app_event':
-        // Handle app events
-        console.log('App event:', data);
-        break;
-      default:
-        console.log('Unknown webhook type:', type);
     }
     
     return res.status(200).json({
@@ -45,11 +44,17 @@ export default function handler(req, res) {
     });
   }
   
-  // GET request - return webhook info
+  if (req.method !== 'GET') {
+    return res.status(405).json({ 
+      error: 'Method not allowed',
+      allowed: ['GET', 'POST'],
+      received: req.method
+    });
+  }
+  
   res.status(200).json({
     webhook: true,
     version: "1.0.0",
-    timestamp: new Date().toISOString(),
     status: "active",
     message: "SplitPay webhook endpoint is active"
   });

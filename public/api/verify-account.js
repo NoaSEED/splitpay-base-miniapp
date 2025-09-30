@@ -1,31 +1,22 @@
-// Base Mini App Account Verification Endpoint
-// This endpoint handles account verification for Base
+import { setCORSHeaders } from './middleware/cors.js';
 
+/**
+ * Base Mini App Account Verification Endpoint
+ * Handles account verification for Base platform
+ * @param {Object} req - Next.js request object
+ * @param {Object} res - Next.js response object
+ */
 export default function handler(req, res) {
-  // Set CORS headers for Base
-  res.setHeader('Access-Control-Allow-Origin', '*');
-  res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
-  res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
+  setCORSHeaders(res);
   
-  // Handle preflight requests
   if (req.method === 'OPTIONS') {
     return res.status(200).end();
   }
-  
-  // Log verification request
-  console.log('Account verification request:', {
-    method: req.method,
-    headers: req.headers,
-    body: req.body,
-    query: req.query,
-    timestamp: new Date().toISOString()
-  });
   
   // Simple account verification
   if (req.method === 'POST') {
     const { address, signature, message } = req.body || {};
     
-    // Basic validation
     if (!address || !signature || !message) {
       return res.status(400).json({
         success: false,
@@ -34,21 +25,31 @@ export default function handler(req, res) {
       });
     }
     
-    // For now, just return success (in production, verify signature)
+    const farcasterUsername = process.env.FARCASTER_USERNAME || 'noalatam';
+    const verifiedWallet = process.env.VERIFIED_WALLET || '0xD2F305Aec216eeb84a0E0E4b84582389cB24E669';
+    
     return res.status(200).json({
       success: true,
       verified: true,
       address: address,
+      farcasterUsername: farcasterUsername,
+      verifiedWallet: verifiedWallet,
       timestamp: new Date().toISOString(),
       message: 'Account verification successful'
     });
   }
   
-  // GET request - return verification info
+  if (req.method !== 'GET') {
+    return res.status(405).json({ 
+      error: 'Method not allowed',
+      allowed: ['GET', 'POST'],
+      received: req.method
+    });
+  }
+  
   res.status(200).json({
     verification: true,
     version: "1.0.0",
-    timestamp: new Date().toISOString(),
     status: "active",
     message: "SplitPay account verification endpoint is active"
   });
