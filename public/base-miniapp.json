@@ -1,0 +1,42 @@
+{
+  "name": "SplitPay",
+  "description": "Divide gastos con amigos usando USDC en Base Network. Simple, rápido y seguro.",
+  "version": "1.0.0",
+  "icon": "https://splitpay-base-miniapp.vercel.app/icon.png",
+  "splash": {
+    "image": "https://splitpay-base-miniapp.vercel.app/splash.png",
+    "background": "#0052FF"
+  },
+  "start_url": "https://splitpay-base-miniapp.vercel.app/",
+  "display": "standalone",
+  "orientation": "portrait",
+  "theme_color": "#0052FF",
+  "background_color": "#ffffff",
+  "categories": ["finance", "utilities"],
+  "lang": "es",
+  "scope": "/",
+  "permissions": [
+    "wallet-connection",
+    "expense-splitting",
+    "payment-tracking",
+    "group-management"
+  ],
+  "network": {
+    "chainId": 8453,
+    "name": "Base",
+    "currency": "USDC"
+  },
+  "features": [
+    "wallet-connection",
+    "expense-splitting", 
+    "payment-tracking",
+    "group-management",
+    "debt-notifications"
+  ],
+  "supportedWallets": [
+    "MetaMask",
+    "WalletConnect", 
+    "Coinbase Wallet",
+    "Rabby"
+  ]
+}
