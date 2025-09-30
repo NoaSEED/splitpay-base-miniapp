@@ -1,9 +1,4 @@
 {
-  "accountAssociation": {
-    "header": "eyJmaWQiOjEzNTE3MTAsInR5cGUiOiJhdXRoIiwia2V5IjoiMHhEMkYzMDVBZWMyMTZlZWI4NGEwRTBFNGI4NDU4MjM4OWNCMjRFNjY5In0",
-    "payload": "eyJkb21haW4iOiJzcGxpdHBheS1iYXNlLW1pbmlhcHAudmVyY2VsLmFwcCJ9",
-    "signature": "/SsNKpqmk9ACYpXFBjvLdG6I8wBDGg0vVuwC8VWqlmYgFKTXwAWzCdVkDi9QsL9H562r5CNycQbuRwgGwUkaLBs="
-  },
   "miniapp": {
     "version": "1",
     "name": "My Cool App",
