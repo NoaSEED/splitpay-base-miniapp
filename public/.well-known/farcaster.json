@@ -1,32 +1,36 @@
 {
+  "accountAssociation": {
+    "header": "eyJmaWQiOjEzNTE3MTAsInR5cGUiOiJhdXRoIiwia2V5IjoiMHhEMkYzMDVBZWMyMTZlZWI4NGEwRTBFNGI4NDU4MjM4OWNCMjRFNjY5In0",
+    "payload": "eyJkb21haW4iOiJzcGxpdHBheS1iYXNlLW1pbmlhcHAudmVyY2VsLmFwcCJ9",
+    "signature": "/SsNKpqmk9ACYpXFBjvLdG6I8wBDGg0vVuwC8VWqlmYgFKTXwAWzCdVkDi9QsL9H562r5CNycQbuRwgGwUkaLBs="
+  },
   "miniapp": {
     "version": "1",
-    "name": "SplitPay",
-    "homeUrl": "https://splitpay-base-miniapp.vercel.app/",
+    "name": "My Cool App",
+    "homeUrl": "https://splitpay-base-miniapp.vercel.app",
     "iconUrl": "https://splitpay-base-miniapp.vercel.app/icon.png",
     "splashImageUrl": "https://splitpay-base-miniapp.vercel.app/splash.png",
-    "splashBackgroundColor": "#0052FF",
+    "splashBackgroundColor": "#6200EA",
     "webhookUrl": "https://splitpay-base-miniapp.vercel.app/api/webhook",
-    "subtitle": "Gastos en Base",
-    "description": "Divide gastos con amigos usando USDC en Base Network. Simple, rápido y seguro.",
+    "subtitle": "Connect and share instantly",
+    "description": "Experience the future of social networking. Connect with friends, share moments, and discover communities that matter to you.",
     "screenshotUrls": [
-      "https://splitpay-base-miniapp.vercel.app/screenshot-portrait.png",
-      "https://splitpay-base-miniapp.vercel.app/screenshot-landscape.png"
+      "https://example.com/screenshot1.png"
     ],
     "primaryCategory": "finance",
     "tags": [
-      "finance",
-      "payments",
-      "base",
-      "usdc",
-      "split-bills"
+      "social",
+      "messaging",
+      "community"
     ],
-    "heroImageUrl": "https://splitpay-base-miniapp.vercel.app/hero.png",
-    "tagline": "Gastos compartidos",
-    "buttonTitle": "💰 Split",
-    "ogTitle": "SplitPay",
-    "ogDescription": "Divide gastos con amigos usando USDC en Base Network.",
-    "ogImageUrl": "https://splitpay-base-miniapp.vercel.app/og-image.png",
+    "heroImageUrl": "https://example.com/hero.png",
+    "tagline": "Grow, Raid & Rise in Stoke Fire",
+    "buttonTitle": "Open mini app",
+    "ogTitle": "AppName - Local News Fast",
+    "ogDescription": "Get breaking news and updates from your community in real-time",
+    "ogImageUrl": "https://example.com/og-image.png",
+    "castShareUrl": "https://warpcast.com/~/compose?text=Check+out+this+app",
+    "imageUrl": "https://splitpay-base-miniapp.vercel.app/image.png",
     "noindex": false
   }
 }
