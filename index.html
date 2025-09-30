@@ -26,21 +26,8 @@
     <meta name="base-miniapp-status" content="ready" />
     <meta name="base-miniapp-features" content="wallet-connection,expense-splitting,payment-tracking,group-management" />
     
-    <!-- Farcaster Frame Meta Tags for Embeds -->
-    <meta name="fc:frame" content='{
-      "version": "next",
-      "imageUrl": "https://splitpay-base-miniapp.vercel.app/og-image.png",
-      "button": {
-        "title": "Launch SplitPay",
-        "action": {
-          "type": "launch_frame",
-          "name": "SplitPay",
-          "url": "https://splitpay-base-miniapp.vercel.app/",
-          "splashImageUrl": "https://splitpay-base-miniapp.vercel.app/splash.png",
-          "splashBackgroundColor": "#0052FF"
-        }
-      }
-    }' />
+    <!-- Farcaster Frame Meta Tags for Embeds - FIXED JSON FORMAT -->
+    <meta name="fc:frame" content='{"version":"next","imageUrl":"https://splitpay-base-miniapp.vercel.app/og-image.png","button":{"title":"Launch SplitPay","action":{"type":"launch_frame","name":"SplitPay","url":"https://splitpay-base-miniapp.vercel.app/","splashImageUrl":"https://splitpay-base-miniapp.vercel.app/splash.png","splashBackgroundColor":"#0052FF"}}}' />
     
     <!-- Open Graph Meta Tags -->
     <meta property="og:title" content="SplitPay - Gastos Compartidos en Base" />
