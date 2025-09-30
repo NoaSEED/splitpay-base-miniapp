@@ -4,12 +4,7 @@
     "payload": "eyJkb21haW4iOiJzcGxpdHBheS1iYXNlLW1pbmlhcHAudmVyY2VsLmFwcCJ9",
     "signature": "/SsNKpqmk9ACYpXFBjvLdG6I8wBDGg0vVuwC8VWqlmYgFKTXwAWzCdVkDi9QsL9H562r5CNycQbuRwgGwUkaLBs="
   },
-  "baseBuilder": {
-    "allowedAddresses": [
-      "0xde1032622D24A4512B7372Bb65767f13f178d30C"
-    ]
-  },
-  "frame": {
+  "miniapp": {
     "version": "1",
     "name": "SplitPay",
     "homeUrl": "https://splitpay-base-miniapp.vercel.app/",
@@ -33,7 +28,8 @@
     ],
     "heroImageUrl": "https://splitpay-base-miniapp.vercel.app/hero.png",
     "tagline": "Gastos compartidos",
-    "ogTitle": "SplitPay - Gastos Compartidos en Base",
+    "buttonTitle": "💰 Split",
+    "ogTitle": "SplitPay",
     "ogDescription": "Divide gastos con amigos usando USDC en Base Network.",
     "ogImageUrl": "https://splitpay-base-miniapp.vercel.app/og-image.png",
     "noindex": false
