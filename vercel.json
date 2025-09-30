@@ -1,8 +1,31 @@
 {
+  "functions": {
+    "public/api/ready.js": {
+      "runtime": "nodejs18.x"
+    },
+    "public/api/webhook.js": {
+      "runtime": "nodejs18.x"
+    },
+    "public/api/verify-account.js": {
+      "runtime": "nodejs18.x"
+    }
+  },
   "rewrites": [
     {
       "source": "/.well-known/farcaster.json",
       "destination": "/.well-known/farcaster.json"
+    },
+    {
+      "source": "/api/ready",
+      "destination": "/api/ready.js"
+    },
+    {
+      "source": "/api/webhook",
+      "destination": "/api/webhook.js"
+    },
+    {
+      "source": "/api/verify-account",
+      "destination": "/api/verify-account.js"
     }
   ],
   "headers": [
@@ -16,6 +39,23 @@
         {
           "key": "Cache-Control",
           "value": "public, max-age=300"
+        }
+      ]
+    },
+    {
+      "source": "/api/(.*)",
+      "headers": [
+        {
+          "key": "Access-Control-Allow-Origin",
+          "value": "*"
+        },
+        {
+          "key": "Access-Control-Allow-Methods",
+          "value": "GET, POST, OPTIONS"
+        },
+        {
+          "key": "Access-Control-Allow-Headers",
+          "value": "Content-Type"
         }
       ]
     }
