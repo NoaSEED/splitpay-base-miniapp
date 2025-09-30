@@ -1,15 +1,4 @@
 {
-  "functions": {
-    "public/api/ready.js": {
-      "runtime": "nodejs18.x"
-    },
-    "public/api/webhook.js": {
-      "runtime": "nodejs18.x"
-    },
-    "public/api/verify-account.js": {
-      "runtime": "nodejs18.x"
-    }
-  },
   "rewrites": [
     {
       "source": "/.well-known/farcaster.json",
