@@ -17,7 +17,7 @@
     "splashImageUrl": "https://splitpay-base-miniapp.vercel.app/splash.png",
     "splashBackgroundColor": "#0052FF",
     "webhookUrl": "https://splitpay-base-miniapp.vercel.app/api/webhook",
-    "subtitle": "Gastos Compartidos en Base",
+    "subtitle": "Gastos en Base",
     "description": "Divide gastos con amigos usando USDC en Base Network. Simple, rápido y seguro.",
     "screenshotUrls": [
       "https://splitpay-base-miniapp.vercel.app/screenshot-portrait.png",
@@ -32,7 +32,7 @@
       "split-bills"
     ],
     "heroImageUrl": "https://splitpay-base-miniapp.vercel.app/hero.png",
-    "tagline": "Divide gastos con amigos en Base",
+    "tagline": "Gastos compartidos",
     "ogTitle": "SplitPay - Gastos Compartidos en Base",
     "ogDescription": "Divide gastos con amigos usando USDC en Base Network.",
     "ogImageUrl": "https://splitpay-base-miniapp.vercel.app/og-image.png",
