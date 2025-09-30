@@ -2,7 +2,7 @@
   "rewrites": [
     {
       "source": "/.well-known/farcaster.json",
-      "destination": "https://api.farcaster.xyz/miniapps/hosted-manifest/TU_HOSTED_MANIFEST_ID"
+      "destination": "/.well-known/farcaster.json"
     },
     {
       "source": "/api/ready",
