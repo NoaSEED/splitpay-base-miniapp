@@ -54,3 +54,5 @@ export default function handler(req, res) {
     message: "SplitPay webhook endpoint is active"
   });
 }
+
+

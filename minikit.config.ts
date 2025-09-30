@@ -3,9 +3,16 @@
 
 const ROOT_URL = process.env.VERCEL_URL 
   ? `https://${process.env.VERCEL_URL}` 
-  : 'http://localhost:3000';
+  : 'http://localhost:3001';
+
+// Validación de ROOT_URL
+if (!ROOT_URL) {
+  throw new Error('ROOT_URL is not defined');
+}
 
 export const minikitConfig = {
+  // TODO: Account Association debe ser generado dinámicamente
+  // Estos son valores de ejemplo - reemplazar con valores reales de producción
   accountAssociation: { 
     "header": "eyJmaWQiOjEzNTE3MTAsInR5cGUiOm51bGwsImtleSI6IjB4ZGUxMDMyNjIyRDI0QTQ1MTJCNzM3MkJiNjU3NjdmMTNmMTc4ZDMwQyJ9",
     "payload": "eyJkb21haW4iOiJzcGxpdHBheS1iYXNlLW1pbmlhcHAudmVyY2VsLmFwcCJ9",

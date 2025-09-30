@@ -1,57 +1,20 @@
-#!/usr/bin/env node
+import fs from 'fs';
+import path from 'path';
+import { fileURLToPath } from 'url';
+import { minikitConfig } from '../minikit.config.ts';
 
-import { writeFileSync, mkdirSync } from 'fs'
-import { join, dirname } from 'path'
-import { fileURLToPath } from 'url'
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
-const __filename = fileURLToPath(import.meta.url)
-const __dirname = dirname(__filename)
-const rootDir = join(__dirname, '..')
+const manifest = {
+  version: "1",
+  name: minikitConfig.miniapp.name,
+  iconUrl: minikitConfig.miniapp.iconUrl,
+  splashImageUrl: minikitConfig.miniapp.splashImageUrl,
+  splashBackgroundColor: minikitConfig.miniapp.splashBackgroundColor,
+  homeUrl: minikitConfig.miniapp.homeUrl
+};
 
-console.log('🔧 Building Base Mini App manifest...')
-
-// Create the farcaster.json manifest
-const farcasterManifest = {
-  accountAssociation: {
-    header: "eyJmaWQiOjEzNTE3MTAsInR5cGUiOm51bGwsImtleSI6IjB4ZGUxMDMyNjIyRDI0QTQ1MTJCNzM3MkJiNjU3NjdmMTNmMTc4ZDMwQyJ9",
-    payload: "eyJkb21haW4iOiJzcGxpdHBheS1iYXNlLW1pbmlhcHAudmVyY2VsLmFwcCJ9",
-    signature: "MHgwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDBjYTExYmRlMDU5NzdiMzYzMTE2NzAyODg2MmJlMmExNzM5NzZjYTExMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDA2MDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAyZTAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMjQ0ODJhZDU2Y2IwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDIwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMTAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMjAwMDAwMDAwMDAwMDAwMDAwMDBiYTVlZDExMGVmZGJhM2QwMDViZmM4ODJkNzUzNThhY2JiYjg1ODQyMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwNjAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMTU0M2ZmYmEzNmYwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDQwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDIwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDQwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDBhMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwNDAyM2FkZWMyNDMxYmVhNzZiMmZmYjAwZWVhZjFkYTM2YTBlMTdlMmI2NWY2YWE4ZGJkNDQ3ZGIzMjEwNzU1MTJiMjE4YWRlOTVhM2VkNzkzZTFkNTM2NjZjMzM2MzI5MWQ0YzMxMTkxODQwMDRlZTg2YjZkYWY0ZGY2OWJjM2JkZjAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMjAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDBmODUyMTBiMjFjYzUwMzAyZjQ3N2JhNTY2ODZkMjAxOWRjOWI2N2FkZTE1YjBhOGM0NGVjYWQ0NTY1MzNkMDExMGVhZDJjZTAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAyODAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDIwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwNDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMjAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAyMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwYzAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMTIwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAxNzAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDE5YmE2NTBhZGJkMDk1NmU5MmJjYTc3ZWI1MWI5ZmFjYzRiOTFmYmUxMDEwNzdiNzI5YWNiY2M0NGYxYThhZDI2NTEzMTAwYjM0NDMyMTdmY2UyMWEzMTg4OGNlZjc3NTQ3YzI0ZTgwYTM2Mzc2NDA5ODQxYTdkMjdiMTVkZjkyYTAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMjVmMTk4MDg2YjJkYjE3MjU2NzMxYmM0NTY2NzNiOTZiY2VmMjNmNTFkMWZiYWNkZDdjNDM3OWVmNjU0NjU1NzJmMWQwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwOGE3YjIyNzQ3OTcwNjUyMjNhMjI3NzY1NjI2MTc1NzQ2ODZlMmU2NzY1NzQyMjJjMjI2MzY4NjE2YzZjNjU2ZTY3NjUyMjNhMjI2MTMzNzI1OTQyMzQ2MzZlNzUzOTU5NTk0NjU0NTU0YzUzNWY0ODU4NzgzMTRjMzEzOTM0NmQ2ODRmNTc0YjJkNzE2NjUzNTc0ZjQ3MzA1MDVhN2E0OTIyMmMyMjZmNzI2OTY3Njk2ZTIyM2EyMjY4NzQ3NDcwNzMzYTJmMmY2YjY1Nzk3MzJlNjM2ZjY5NmU2MjYxNzM2NTJlNjM2ZjZkMjIyYzIyNjM3MjZmNzM3MzRmNzI2OTY3Njk2ZTIyM2E2NjYxNmM3MzY1N2QwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDY0OTI2NDkyNjQ5MjY0OTI2NDkyNjQ5MjY0OTI2NDkyNjQ5MjY0OTI2NDkyNjQ5MjY0OTI2NDkyNjQ5MjY0OTI"
-  },
-  baseBuilder: {
-    allowedAddresses: ["0xde1032622D24A4512B7372Bb65767f13f178d30C"]
-  },
-  frame: {
-    version: "1",
-    name: "SplitPay",
-    homeUrl: "https://splitpay-base-miniapp.vercel.app/",
-    iconUrl: "https://splitpay-base-miniapp.vercel.app/icon.png",
-    splashImageUrl: "https://splitpay-base-miniapp.vercel.app/splash.png",
-    splashBackgroundColor: "#0052FF",
-    webhookUrl: "https://splitpay-base-miniapp.vercel.app/api/webhook",
-    subtitle: "Gastos Compartidos en Base",
-    description: "Divide gastos con amigos usando USDC en Base Network. Simple, rápido y seguro.",
-    screenshotUrls: [
-      "https://splitpay-base-miniapp.vercel.app/screenshot-portrait.png",
-      "https://splitpay-base-miniapp.vercel.app/screenshot-landscape.png"
-    ],
-    primaryCategory: "finance",
-    tags: ["finance", "payments", "base", "usdc", "split-bills"],
-    heroImageUrl: "https://splitpay-base-miniapp.vercel.app/hero.png",
-    tagline: "Divide gastos con amigos en Base",
-    ogTitle: "SplitPay - Gastos Compartidos en Base",
-    ogDescription: "Divide gastos con amigos usando USDC en Base Network.",
-    ogImageUrl: "https://splitpay-base-miniapp.vercel.app/og-image.png",
-    noindex: false
-  }
-}
-
-// Ensure .well-known directory exists
-const wellKnownDir = join(rootDir, 'dist', '.well-known')
-mkdirSync(wellKnownDir, { recursive: true })
-
-// Write the farcaster.json manifest
-const farcasterPath = join(wellKnownDir, 'farcaster.json')
-writeFileSync(farcasterPath, JSON.stringify(farcasterManifest, null, 2))
-
-console.log('✅ Generated farcaster.json manifest with Account Association credentials')
-console.log('📁 Location:', farcasterPath)
+const outputPath = path.join(__dirname, '../public/manifest.json');
+fs.writeFileSync(outputPath, JSON.stringify(manifest, null, 2));
+console.log('✅ Manifest generado en public/manifest.json');

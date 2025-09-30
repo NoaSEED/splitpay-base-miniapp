@@ -1,22 +1,8 @@
 {
+  "version": "1",
   "name": "SplitPay",
-  "short_name": "SplitPay",
-  "description": "Divide gastos con amigos usando USDC en Base Network. Simple, rápido y seguro.",
-  "start_url": "/",
-  "display": "standalone",
-  "background_color": "#ffffff",
-  "theme_color": "#0052FF",
-  "orientation": "portrait",
-  "scope": "/",
-  "icons": [
-    {
-      "src": "/icon.png",
-      "sizes": "128x128",
-      "type": "image/png",
-      "purpose": "any"
-    }
-  ],
-  "categories": ["finance", "utilities"],
-  "lang": "es",
-  "dir": "ltr"
+  "iconUrl": "http://localhost:3001/icon.png",
+  "splashImageUrl": "http://localhost:3001/splash.png",
+  "splashBackgroundColor": "#0052FF",
+  "homeUrl": "http://localhost:3001"
 }

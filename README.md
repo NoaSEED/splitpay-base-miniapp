@@ -228,5 +228,4 @@ Este proyecto está bajo la Licencia MIT. Ver el archivo [LICENSE](LICENSE) para
 [![GitHub stars](https://img.shields.io/github/stars/facundomedina/splitpay-base-miniapp?style=social)](https://github.com/facundomedina/splitpay-base-miniapp/stargazers)
 
 </div>
-# Force Vercel redeploy Tue Sep 23 19:03:22 -03 2025
 

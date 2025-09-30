@@ -9,38 +9,14 @@
     
     <!-- Base Mini App Manifest -->
     <link rel="manifest" href="/manifest.json" />
-    <link rel="manifest" href="/base-manifest.json" />
-    <link rel="manifest" href="/miniapp.json" />
-    <link rel="manifest" href="/.well-known/manifest.json" />
-    <link rel="manifest" href="/base-miniapp-config.json" />
-    <link rel="manifest" href="/.well-known/farcaster.json" />
+    <link rel="manifest" href="/base-miniapp.json" />
     
     <!-- Base Mini App Meta Tags -->
     <meta name="base-miniapp" content="true" />
     <meta name="base-network" content="8453" />
-    <meta name="base-currency" content="USDC" />
-    <meta name="base-miniapp-version" content="1" />
-    <meta name="base-miniapp-category" content="finance" />
-    <meta name="base-miniapp-tags" content="finance,payments,base,usdc,split-bills" />
-    <meta name="base-miniapp-ready" content="true" />
-    <meta name="base-miniapp-status" content="ready" />
-    <meta name="base-miniapp-features" content="wallet-connection,expense-splitting,payment-tracking,group-management" />
     
-    <!-- Farcaster Frame Meta Tags for Embeds -->
-    <meta name="fc:frame" content='{
-      "version": "next",
-      "imageUrl": "https://splitpay-base-miniapp.vercel.app/og-image.png",
-      "button": {
-        "title": "Launch SplitPay",
-        "action": {
-          "type": "launch_frame",
-          "name": "SplitPay",
-          "url": "https://splitpay-base-miniapp.vercel.app/",
-          "splashImageUrl": "https://splitpay-base-miniapp.vercel.app/splash.png",
-          "splashBackgroundColor": "#0052FF"
-        }
-      }
-    }' />
+    <!-- Farcaster Frame Meta Tags for Embeds - FIXED JSON FORMAT -->
+    <meta name="fc:frame" content='{"version":"next","imageUrl":"https://splitpay-base-miniapp.vercel.app/og-image.png","button":{"title":"Launch SplitPay","action":{"type":"launch_frame","name":"SplitPay","url":"https://splitpay-base-miniapp.vercel.app/","splashImageUrl":"https://splitpay-base-miniapp.vercel.app/splash.png","splashBackgroundColor":"#0052FF"}}}' />
     
     <!-- Open Graph Meta Tags -->
     <meta property="og:title" content="SplitPay - Gastos Compartidos en Base" />
@@ -55,12 +31,12 @@
     <meta name="twitter:title" content="SplitPay - Gastos Compartidos en Base" />
     <meta name="twitter:description" content="Divide gastos con amigos usando USDC en Base Network. Simple, rápido y seguro." />
     <meta name="twitter:image" content="https://splitpay-base-miniapp.vercel.app/og-image.png" />
-    <script type="module" crossorigin src="/assets/index-B8MKHkWQ.js"></script>
+    <script type="module" crossorigin src="/assets/index-C62qAeV8.js"></script>
     <link rel="modulepreload" crossorigin href="/assets/vendor-2KnJ_jrg.js">
     <link rel="modulepreload" crossorigin href="/assets/router-lOrOEvDf.js">
-    <link rel="modulepreload" crossorigin href="/assets/ui-Cewp0lBb.js">
+    <link rel="modulepreload" crossorigin href="/assets/ui-DFwGTn3F.js">
     <link rel="modulepreload" crossorigin href="/assets/ethers-BqGocQm3.js">
-    <link rel="stylesheet" crossorigin href="/assets/index-KUkXWrLk.css">
+    <link rel="stylesheet" crossorigin href="/assets/index-D44xzB93.css">
   </head>
   <body>
     <div id="root"></div>

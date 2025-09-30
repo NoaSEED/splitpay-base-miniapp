@@ -21,3 +21,5 @@ export default function handler(req, res) {
     message: "SplitPay Mini App is ready"
   });
 }
+
+

@@ -53,3 +53,5 @@ export default function handler(req, res) {
     message: "SplitPay account verification endpoint is active"
   });
 }
+
+
