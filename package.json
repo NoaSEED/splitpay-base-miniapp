@@ -12,6 +12,7 @@
     "validate": "node -e \"const fs=require('fs');try{JSON.parse(fs.readFileSync('public/manifest.json','utf8'));console.log('✅ manifest.json válido')}catch(e){console.error('❌ manifest.json inválido:',e.message);process.exit(1)}\""
   },
   "dependencies": {
+    "@web3modal/ethers": "^5.1.11",
     "ethers": "^6.8.1",
     "lucide-react": "^0.294.0",
     "react": "^18.2.0",

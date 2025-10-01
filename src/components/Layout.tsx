@@ -111,8 +111,14 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
             </div>
           </div>
           
-          {/* Additional Info */}
+          {/* Disclaimer */}
           <div className="mt-4 pt-4 border-t border-base-200">
+            <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-3 mb-4">
+              <p className="text-xs text-yellow-800 text-center">
+                ⚠️ <span className="font-semibold">Esta app está en desarrollo activo.</span> Úsala con precaución y bajo tu propio riesgo.
+              </p>
+            </div>
+            
             <div className="flex flex-col md:flex-row justify-between items-center text-xs text-gray-500 space-y-2 md:space-y-0">
               <div className="flex items-center space-x-4">
                 <span>🔒 {t('footer.secure_transactions')}</span>
