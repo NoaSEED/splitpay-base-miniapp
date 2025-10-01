@@ -23,7 +23,8 @@ interface Web3ContextType {
   isBaseNetwork: boolean
   
   // Actions
-  connectWallet: (walletType?: 'metamask' | 'rabby' | 'coinbase' | 'trust' | 'default') => Promise<void>
+  connectWallet: (walletType?: 'metamask' | 'rabby' | 'coinbase' | 'trust' | 'walletconnect' | 'default') => Promise<void>
+  connectWalletConnect: (provider: any) => Promise<void>
   disconnectWallet: () => void
   switchNetwork: (chainId: number) => Promise<void>
   addNetwork: (chainId: number) => Promise<void>
@@ -79,7 +80,7 @@ export const Web3Provider: React.FC<{ children: ReactNode }> = ({ children }) =>
   // Wallet Connection
   // ===========================================
 
-  const getWalletProvider = useCallback((walletType: 'metamask' | 'rabby' | 'coinbase' | 'trust' | 'default' = 'default') => {
+  const getWalletProvider = useCallback((walletType: 'metamask' | 'rabby' | 'coinbase' | 'trust' | 'walletconnect' | 'default' = 'default') => {
     if (typeof window === 'undefined') return null;
 
     switch (walletType) {
@@ -91,17 +92,25 @@ export const Web3Provider: React.FC<{ children: ReactNode }> = ({ children }) =>
         return (window.ethereum as any)?.isCoinbaseWallet ? window.ethereum : null;
       case 'trust':
         return (window.ethereum as any)?.isTrust ? window.ethereum : null;
+      case 'walletconnect':
+        // For WalletConnect, we'll handle it separately in the component
+        return null;
       case 'default':
       default:
         return window.ethereum; // Fallback to generic ethereum provider
     }
   }, []);
 
-  const connectWallet = useCallback(async (walletType: 'metamask' | 'rabby' | 'coinbase' | 'trust' | 'default' = 'default'): Promise<void> => {
+  const connectWallet = useCallback(async (walletType: 'metamask' | 'rabby' | 'coinbase' | 'trust' | 'walletconnect' | 'default' = 'default'): Promise<void> => {
     const selectedProvider = getWalletProvider(walletType);
 
-    if (!selectedProvider) {
+    if (!selectedProvider && walletType !== 'walletconnect') {
       toast.error(ERROR_MESSAGES.METAMASK_NOT_INSTALLED);
+      return;
+    }
+
+    // For WalletConnect, let the component handle it
+    if (walletType === 'walletconnect') {
       return;
     }
 
@@ -161,6 +170,57 @@ export const Web3Provider: React.FC<{ children: ReactNode }> = ({ children }) =>
       setIsLoading(false)
     }
   }, [isNetworkSupported, getNetworkName, getWalletProvider])
+
+  const connectWalletConnect = useCallback(async (provider: any): Promise<void> => {
+    if (!provider) {
+      toast.error('Provider de WalletConnect no disponible');
+      return;
+    }
+
+    setIsLoading(true);
+    try {
+      const ethersProvider = new ethers.BrowserProvider(provider);
+      
+      // Request account access
+      const accounts = await ethersProvider.send('eth_requestAccounts', []);
+      
+      if (accounts.length === 0) {
+        throw new Error('No se encontraron cuentas');
+      }
+
+      const signer = await ethersProvider.getSigner();
+      const network = await ethersProvider.getNetwork();
+      const currentChainId = Number(network.chainId);
+
+      // Check if network is supported
+      if (!isNetworkSupported(currentChainId)) {
+        toast.error(`${ERROR_MESSAGES.UNSUPPORTED_NETWORK} ${getNetworkName(currentChainId)}`);
+        // Auto-switch to Base
+        await switchNetwork(BASE_NETWORK.chainId);
+        return;
+      }
+
+      setProvider(ethersProvider);
+      setSigner(signer);
+      setAccount(accounts[0]);
+      setChainId(currentChainId);
+
+      toast.success(`${SUCCESS_MESSAGES.WALLET_CONNECTED} ${getNetworkName(currentChainId)}`);
+      
+      // Log connection for analytics
+      console.log('🔗 WalletConnect conectado:', {
+        address: accounts[0],
+        network: getNetworkName(currentChainId),
+        chainId: currentChainId
+      });
+
+    } catch (error: unknown) {
+      console.error('Error connecting WalletConnect:', error);
+      toast.error(`${ERROR_MESSAGES.GENERIC_CONNECTION_ERROR} ${String(error)}`);
+    } finally {
+      setIsLoading(false);
+    }
+  }, [isNetworkSupported, getNetworkName, switchNetwork]);
 
   const disconnectWallet = useCallback((): void => {
     setAccount(null)
@@ -348,6 +408,7 @@ export const Web3Provider: React.FC<{ children: ReactNode }> = ({ children }) =>
     
     // Actions
     connectWallet,
+    connectWalletConnect,
     disconnectWallet,
     switchNetwork,
     addNetwork,
@@ -366,6 +427,7 @@ export const Web3Provider: React.FC<{ children: ReactNode }> = ({ children }) =>
     currentNetwork,
     isBaseNetwork,
     connectWallet,
+    connectWalletConnect,
     disconnectWallet,
     switchNetwork,
     addNetwork,

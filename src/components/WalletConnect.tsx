@@ -1,54 +1,15 @@
 import React, { useState } from 'react'
 import { Wallet, LogOut, Copy, Check, ChevronDown } from 'lucide-react'
 import { useWeb3 } from '../contexts/Web3Context'
-import { createWeb3Modal, defaultConfig } from '@web3modal/ethers/react'
 import { useWeb3Modal } from '@web3modal/ethers/react'
-
-// 1. Get projectId from environment or use a public one
-const projectId = '3fbb6bba6f1de962d911bb5b5c9ddd26'
-
-// 2. Set chains
-const base = {
-  chainId: 8453,
-  name: 'Base',
-  currency: 'ETH',
-  explorerUrl: 'https://basescan.org',
-  rpcUrl: 'https://mainnet.base.org'
-}
-
-// 3. Create a metadata object
-const metadata = {
-  name: 'SplitPay',
-  description: 'Gastos Compartidos en Base',
-  url: 'https://splitpay-base-miniapp.vercel.app',
-  icons: ['https://splitpay-base-miniapp.vercel.app/icon.png']
-}
-
-// 4. Create Ethers config
-const ethersConfig = defaultConfig({
-  metadata,
-  enableEIP6963: true,
-  enableInjected: true,
-  enableCoinbase: true,
-  rpcUrl: 'https://mainnet.base.org',
-  defaultChainId: 8453,
-})
-
-// 5. Create a Web3Modal instance
-createWeb3Modal({
-  ethersConfig,
-  chains: [base],
-  projectId,
-  enableAnalytics: false,
-  themeMode: 'light',
-})
 
 const WalletConnect: React.FC = () => {
   const { 
     account, 
     isConnected, 
     isLoading, 
-    connectWallet, 
+    connectWallet,
+    connectWalletConnect, 
     disconnectWallet, 
     formatAddress,
     currentNetwork 
@@ -77,7 +38,14 @@ const WalletConnect: React.FC = () => {
 
   const handleConnectWalletConnect = async () => {
     setShowOptions(false)
-    await open()
+    try {
+      const result = await open()
+      if (result && result.provider) {
+        await connectWalletConnect(result.provider)
+      }
+    } catch (error) {
+      console.error('Error opening WalletConnect modal:', error)
+    }
   }
 
   if (isLoading) {

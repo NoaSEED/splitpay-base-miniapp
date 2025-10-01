@@ -17,3 +17,6 @@ El archivo `manifest.json` es servido automáticamente por:
 
 ## Actualización
 Para actualizar información de la app, editar SOLO `public/manifest.json`
+
+
+
