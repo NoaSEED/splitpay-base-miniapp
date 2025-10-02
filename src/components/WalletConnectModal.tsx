@@ -8,7 +8,6 @@ interface WalletConnectModalProps {
 }
 
 const WalletConnectModal: React.FC<WalletConnectModalProps> = ({ isOpen, onClose, onConnect }) => {
-  const [qrCode, setQrCode] = useState<string>('')
   const [deepLink, setDeepLink] = useState<string>('')
   const [copied, setCopied] = useState(false)
   const [isConnecting, setIsConnecting] = useState(false)
@@ -28,7 +27,6 @@ const WalletConnectModal: React.FC<WalletConnectModalProps> = ({ isOpen, onClose
       const mockUri = 'wc:1234567890abcdef@1?bridge=https%3A%2F%2Fbridge.walletconnect.org&key=1234567890abcdef'
       const mockDeepLink = `https://walletconnect.org/wc?uri=${encodeURIComponent(mockUri)}`
       
-      setQrCode(mockUri)
       setDeepLink(mockDeepLink)
       
       // Simular conexión exitosa después de 3 segundos
@@ -64,7 +62,6 @@ const WalletConnectModal: React.FC<WalletConnectModalProps> = ({ isOpen, onClose
   }
 
   const handleClose = () => {
-    setQrCode('')
     setDeepLink('')
     setIsConnecting(false)
     onClose()
