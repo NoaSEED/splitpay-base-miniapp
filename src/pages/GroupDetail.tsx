@@ -392,7 +392,7 @@ const GroupDetail: React.FC = () => {
                          )}
                        </div>
                        <p className="text-sm text-gray-500">
-                         Pagado por: {expense.paidBy?.slice(0, 6)}...{expense.paidBy?.slice(-4)}
+                         Pagado por: {group.participantNames?.[expense.paidBy] || `${expense.paidBy?.slice(0, 6)}...${expense.paidBy?.slice(-4)}`}
                        </p>
                        <p className="text-sm text-gray-500">
                          {formatDate(expense.createdAt)}
@@ -487,11 +487,14 @@ const GroupDetail: React.FC = () => {
                   onChange={(e) => setNewExpense({...newExpense, paidBy: e.target.value})}
                   className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-base-500 focus:border-base-500"
                 >
-                  {group.participants.map((participant: string, index: number) => (
-                    <option key={index} value={participant}>
-                      {participant === account ? 'Tú' : `${participant.slice(0, 6)}...${participant.slice(-4)}`}
-                    </option>
-                  ))}
+                  {group.participants.map((participant: string, index: number) => {
+                    const participantName = group.participantNames?.[participant] || `${participant.slice(0, 6)}...${participant.slice(-4)}`
+                    return (
+                      <option key={index} value={participant}>
+                        {participant === account ? 'Tú' : participantName}
+                      </option>
+                    )
+                  })}
                 </select>
               </div>
               

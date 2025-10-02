@@ -68,26 +68,26 @@ const Dashboard: React.FC = () => {
           </p>
         </div>
         
-        <div className="flex items-center space-x-3">
-          {/* Botón de Swap */}
-          <button
-            onClick={() => setShowSwap(true)}
-            className="flex items-center space-x-2 px-4 py-2 bg-gradient-to-r from-blue-500 to-blue-600 text-white rounded-lg hover:from-blue-600 hover:to-blue-700 transition-all shadow-md"
-          >
-            <span className="text-lg">🦄</span>
-            <ArrowLeftRight className="w-4 h-4" />
-            <span>Swap</span>
-          </button>
-          
-          {/* Botón de Crear Grupo */}
-          <Link
-            to="/create-group"
-            className="flex items-center space-x-2 px-4 py-2 bg-base-500 text-white rounded-lg hover:bg-base-600 transition-colors"
-          >
-            <Plus className="w-4 h-4" />
-            <span>{t('dashboard.create_group')}</span>
-          </Link>
-        </div>
+            <div className="flex items-center space-x-3">
+              {/* Botón de Swap */}
+              <button
+                onClick={() => setShowSwap(true)}
+                className="flex items-center space-x-2 px-4 py-2 bg-gradient-to-r from-blue-500 to-blue-600 text-white rounded-lg hover:from-blue-600 hover:to-blue-700 transition-all shadow-md"
+              >
+                <span className="text-lg">🦄</span>
+                <ArrowLeftRight className="w-4 h-4" />
+                <span>Swap</span>
+              </button>
+              
+              {/* Botón de Crear Grupo */}
+              <Link
+                to="/create-group"
+                className="flex items-center space-x-2 px-4 py-2 bg-base-500 text-white rounded-lg hover:bg-base-600 transition-colors"
+              >
+                <Plus className="w-4 h-4" />
+                <span>{t('dashboard.create_group')}</span>
+              </Link>
+            </div>
       </div>
 
       {/* Stats Cards */}
@@ -131,13 +131,10 @@ const Dashboard: React.FC = () => {
 
       {/* Groups Section */}
       <div>
-        <div className="flex items-center justify-between mb-6">
+        <div className="mb-6">
           <h2 className="text-xl font-semibold text-gray-900">
             {t('dashboard.my_groups')}
           </h2>
-          <span className="text-sm text-gray-500">
-            {userGroups.length} {t('dashboard.groups_count')}
-          </span>
         </div>
 
         {userGroups.length === 0 ? (
@@ -168,26 +165,6 @@ const Dashboard: React.FC = () => {
         )}
       </div>
 
-      {/* Quick Actions */}
-      <div className="bg-base-50 rounded-lg p-6">
-        <h3 className="text-lg font-semibold text-gray-900 mb-4">
-          Acciones Rápidas
-        </h3>
-        <div className="flex justify-center">
-          <Link
-            to="/create-group"
-            className="flex items-center space-x-3 p-4 bg-white rounded-lg hover:shadow-sm transition-shadow border border-base-200"
-          >
-            <div className="w-10 h-10 bg-base-100 rounded-lg flex items-center justify-center">
-              <Plus className="w-5 h-5 text-base-600" />
-            </div>
-            <div>
-              <p className="font-medium text-gray-900">{t('ui.create_new_group')}</p>
-              <p className="text-sm text-gray-600">{t('ui.start_new_group')}</p>
-            </div>
-          </Link>
-        </div>
-      </div>
 
       {/* Modal de Swap */}
       <SplitPayExchange 

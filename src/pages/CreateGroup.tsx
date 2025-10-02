@@ -68,7 +68,8 @@ const CreateGroup: React.FC = () => {
 
     try {
       // Crear mapeo de nombres
-      const participantNames: { [key: string]: string } = {}
+      // Crear el mapeo de nombres de participantes
+      const participantNames: { [address: string]: string } = {}
       participants.forEach(p => {
         participantNames[p.address.toLowerCase()] = p.name
       })
@@ -77,7 +78,8 @@ const CreateGroup: React.FC = () => {
         name: formData.name,
         description: formData.description,
         category: formData.category,
-        participants: participants.map(p => p.address)
+        participants: participants.map(p => p.address),
+        participantNames
       })
 
       if (success) {

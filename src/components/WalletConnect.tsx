@@ -28,29 +28,9 @@ const WalletConnect: React.FC = () => {
     }
   }
 
-  const handleConnectMetaMask = async () => {
-    await connectWallet('metamask')
+  const handleConnectRabby = async () => {
+    await connectWallet('rabby')
     setShowOptions(false)
-  }
-
-  const handleConnectWalletConnect = async () => {
-    setShowOptions(false)
-    // Mostrar instrucciones para WalletConnect
-    alert(`Para usar WalletConnect:
-
-1. Abre tu wallet móvil (MetaMask, Trust Wallet, etc.)
-2. Busca la opción "WalletConnect" o "Conectar DApp"
-3. Escanea el QR code que aparece aquí
-4. O usa el link directo si está disponible
-
-Nota: WalletConnect requiere una wallet móvil compatible.`)
-    
-    // Intentar conectar con el método default
-    try {
-      await connectWallet('default')
-    } catch (error) {
-      console.log('WalletConnect no disponible, usando método alternativo')
-    }
   }
 
   // Usar el estado local del Web3Context
@@ -87,52 +67,10 @@ Nota: WalletConnect requiere una wallet móvil compatible.`)
                 <p className="text-xs font-semibold text-base-900">Selecciona tu wallet</p>
               </div>
               
-              <div className="p-2 space-y-1">
-                {/* MetaMask / Extensiones */}
-                <button
-                  onClick={handleConnectMetaMask}
-                  className="w-full flex items-center space-x-3 px-3 py-2.5 hover:bg-base-50 rounded-lg transition-colors group"
-                >
-                  <span className="text-2xl">🦊</span>
-                  <div className="flex-1 text-left">
-                    <p className="text-sm font-medium text-gray-900 group-hover:text-base-600">MetaMask</p>
-                    <p className="text-xs text-gray-500">Extensión de navegador</p>
-                  </div>
-                </button>
-
-                {/* WalletConnect */}
-                <button
-                  onClick={handleConnectWalletConnect}
-                  className="w-full flex items-center space-x-3 px-3 py-2.5 hover:bg-base-50 rounded-lg transition-colors group"
-                >
-                  <span className="text-2xl">🔗</span>
-                  <div className="flex-1 text-left">
-                    <p className="text-sm font-medium text-gray-900 group-hover:text-base-600">WalletConnect</p>
-                    <p className="text-xs text-gray-500">Wallets móviles</p>
-                  </div>
-                </button>
-
-                {/* Coinbase */}
-                <button
-                  onClick={() => {
-                    connectWallet('coinbase')
-                    setShowOptions(false)
-                  }}
-                  className="w-full flex items-center space-x-3 px-3 py-2.5 hover:bg-base-50 rounded-lg transition-colors group"
-                >
-                  <span className="text-2xl">💙</span>
-                  <div className="flex-1 text-left">
-                    <p className="text-sm font-medium text-gray-900 group-hover:text-base-600">Coinbase Wallet</p>
-                    <p className="text-xs text-gray-500">App o extensión</p>
-                  </div>
-                </button>
-
+              <div className="p-2">
                 {/* Rabby */}
                 <button
-                  onClick={() => {
-                    connectWallet('rabby')
-                    setShowOptions(false)
-                  }}
+                  onClick={handleConnectRabby}
                   className="w-full flex items-center space-x-3 px-3 py-2.5 hover:bg-base-50 rounded-lg transition-colors group"
                 >
                   <span className="text-2xl">🐰</span>
@@ -150,6 +88,7 @@ Nota: WalletConnect requiere una wallet móvil compatible.`)
   }
 
   return (
+    <>
     <div className="flex items-center space-x-3">
       {/* Network Badge */}
       {currentNetwork && (
@@ -191,6 +130,8 @@ Nota: WalletConnect requiere una wallet móvil compatible.`)
         <LogOut className="w-4 h-4" />
       </button>
     </div>
+
+  </>
   )
 }
 

@@ -94,6 +94,7 @@ export interface CreateGroupForm {
   description: string
   category: string
   participants: string[]
+  participantNames?: { [address: string]: string }
 }
 
 export interface AddExpenseForm {

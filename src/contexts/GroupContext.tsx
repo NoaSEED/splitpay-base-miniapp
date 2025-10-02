@@ -122,7 +122,7 @@ export const GroupProvider: React.FC<{ children: ReactNode }> = ({ children }) =
         expenses: [],
         payments: [],
         totalAmount: 0,
-        participantNames: {},
+        participantNames: groupData.participantNames || {},
       }
 
       const updatedGroups = [...groups, newGroup]
@@ -388,6 +388,31 @@ export const GroupProvider: React.FC<{ children: ReactNode }> = ({ children }) =
       setIsLoading(false)
     }
   }, [groups, saveGroups])
+
+  // Migración automática de grupos existentes sin nombres
+  useEffect(() => {
+    const needsMigration = groups.some(group => 
+      !group.participantNames || Object.keys(group.participantNames).length === 0
+    )
+    
+    if (needsMigration) {
+      setGroups(prevGroups => 
+        prevGroups.map(group => {
+          if (!group.participantNames || Object.keys(group.participantNames).length === 0) {
+            const participantNames: { [address: string]: string } = {}
+            group.participants.forEach((participant, index) => {
+              participantNames[participant.toLowerCase()] = `Participante ${index + 1}`
+            })
+            return {
+              ...group,
+              participantNames
+            }
+          }
+          return group
+        })
+      )
+    }
+  }, [groups.length]) // Solo se ejecuta cuando cambia el número de grupos
 
   const getParticipantName = useCallback((groupId: string, address: string): string => {
     const group = groups.find(g => g.id === groupId)
