@@ -1,8 +1,0 @@
-{
-  "version": "1",
-  "name": "SplitPay",
-  "iconUrl": "http://localhost:3001/icon.png",
-  "splashImageUrl": "http://localhost:3001/splash.png",
-  "splashBackgroundColor": "#0052FF",
-  "homeUrl": "http://localhost:3001"
-}

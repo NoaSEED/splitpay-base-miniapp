@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test WalletConnect</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 600px;
+            margin: 50px auto;
+            padding: 20px;
+        }
+        .test-section {
+            margin: 20px 0;
+            padding: 20px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+        }
+        button {
+            background: #007bff;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            margin: 5px;
+        }
+        button:hover {
+            background: #0056b3;
+        }
+        .result {
+            margin-top: 10px;
+            padding: 10px;
+            background: #f8f9fa;
+            border-radius: 5px;
+            font-family: monospace;
+        }
+    </style>
+</head>
+<body>
+    <h1>Test WalletConnect</h1>
+    
+    <div class="test-section">
+        <h3>1. Test de Configuración</h3>
+        <button onclick="testConfig()">Probar Configuración</button>
+        <div id="config-result" class="result"></div>
+    </div>
+
+    <div class="test-section">
+        <h3>2. Test de Inicialización</h3>
+        <button onclick="testInit()">Inicializar WalletConnect</button>
+        <div id="init-result" class="result"></div>
+    </div>
+
+    <div class="test-section">
+        <h3>3. Test de Conexión</h3>
+        <button onclick="testConnect()">Conectar</button>
+        <div id="connect-result" class="result"></div>
+    </div>
+
+    <script type="module">
+        let walletConnectProvider = null;
+
+        async function testConfig() {
+            const result = document.getElementById('config-result');
+            try {
+                result.innerHTML = 'Probando configuración...';
+                
+                // Simular la configuración
+                const config = {
+                    projectId: 'c8e3b10c5757e6e3e19e5c5e8f9a1b2e',
+                    chains: [8453],
+                    metadata: {
+                        name: 'SplitPay',
+                        description: 'Divide gastos con amigos en Base Network',
+                        url: 'https://splitpayapp.xyz',
+                        icons: ['https://splitpayapp.xyz/icon.png']
+                    }
+                };
+                
+                result.innerHTML = `✅ Configuración válida:<br>${JSON.stringify(config, null, 2)}`;
+            } catch (error) {
+                result.innerHTML = `❌ Error: ${error.message}`;
+            }
+        }
+
+        async function testInit() {
+            const result = document.getElementById('init-result');
+            try {
+                result.innerHTML = 'Inicializando WalletConnect...';
+                
+                // Importar dinámicamente
+                const { EthereumProvider } = await import('https://unpkg.com/@walletconnect/ethereum-provider@2.16.1/dist/index.umd.js');
+                
+                walletConnectProvider = await EthereumProvider.init({
+                    projectId: 'c8e3b10c5757e6e3e19e5c5e8f9a1b2e',
+                    chains: [8453],
+                    optionalChains: [84532],
+                    showQrModal: true,
+                    metadata: {
+                        name: 'SplitPay',
+                        description: 'Divide gastos con amigos en Base Network',
+                        url: 'https://splitpayapp.xyz',
+                        icons: ['https://splitpayapp.xyz/icon.png']
+                    },
+                    rpcMap: {
+                        8453: 'https://mainnet.base.org',
+                        84532: 'https://sepolia.base.org'
+                    }
+                });
+
+                result.innerHTML = '✅ WalletConnect inicializado correctamente';
+            } catch (error) {
+                result.innerHTML = `❌ Error: ${error.message}`;
+            }
+        }
+
+        async function testConnect() {
+            const result = document.getElementById('connect-result');
+            try {
+                if (!walletConnectProvider) {
+                    result.innerHTML = '❌ Primero inicializa WalletConnect';
+                    return;
+                }
+
+                result.innerHTML = 'Conectando...';
+                
+                await walletConnectProvider.enable();
+                
+                result.innerHTML = '✅ WalletConnect conectado exitosamente';
+            } catch (error) {
+                result.innerHTML = `❌ Error: ${error.message}`;
+            }
+        }
+
+        // Hacer las funciones globales
+        window.testConfig = testConfig;
+        window.testInit = testInit;
+        window.testConnect = testConnect;
+    </script>
+</body>
+</html>

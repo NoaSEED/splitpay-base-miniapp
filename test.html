@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Simple - SplitPay</title>
+</head>
+<body>
+    <div id="test-root">
+        <h1>🧪 TEST SIMPLE</h1>
+        <p>Si ves esto, el servidor está funcionando correctamente.</p>
+        <div style="background: #f0f0f0; padding: 20px; margin: 20px 0; border-radius: 8px;">
+            <h2>Estado del Servidor:</h2>
+            <p>✅ Servidor funcionando en puerto 3000</p>
+            <p>✅ HTML cargando</p>
+            <p>✅ Contenido visible</p>
+        </div>
+        <p><strong>Fecha:</strong> <span id="date"></span></p>
+    </div>
+    
+    <script>
+        document.getElementById('date').textContent = new Date().toLocaleString();
+        console.log('✅ JavaScript ejecutándose correctamente');
+    </script>
+</body>
+</html>

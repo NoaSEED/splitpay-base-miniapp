@@ -8,7 +8,7 @@ interface WalletConnectModalProps {
 }
 
 const WalletConnectModal: React.FC<WalletConnectModalProps> = ({ isOpen, onClose, onConnect }) => {
-  const [qrCode, setQrCode] = useState<string>('')
+  const [qrCode] = useState<string>('')
   const [deepLink, setDeepLink] = useState<string>('')
   const [copied, setCopied] = useState(false)
   const [isConnecting, setIsConnecting] = useState(false)
